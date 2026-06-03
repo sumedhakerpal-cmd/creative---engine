@@ -4,6 +4,7 @@ from PIL import Image
 import io
 import zipfile
 import os
+import requests as req_lib
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
@@ -173,6 +174,40 @@ def process():
     return send_file(zip_buf, mimetype="application/zip",
                      as_attachment=True,
                      download_name=f"{base_name}_all-sizes.zip")
+
+@app.route("/api/generate-image", methods=["POST"])
+def generate_image():
+    """
+    Proxy OpenAI image generation to avoid browser CORS issues.
+    Accepts JSON: { prompt, apiKey }
+    Returns: { b64_json } or { error }
+    """
+    data = request.get_json()
+    if not data or "prompt" not in data or "apiKey" not in data:
+        return jsonify({"error": "Missing prompt or apiKey"}), 400
+
+    try:
+        resp = req_lib.post(
+            "https://api.openai.com/v1/images/generations",
+            headers={
+                "Authorization": f"Bearer {data['apiKey']}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "gpt-image-1",
+                "prompt": data["prompt"],
+                "n": 1,
+                "size": "1024x1024",
+                "output_format": "png"
+            },
+            timeout=120
+        )
+        result = resp.json()
+        if not resp.ok:
+            return jsonify({"error": result.get("error", {}).get("message", "OpenAI error")}), resp.status_code
+        return jsonify({"b64_json": result["data"][0]["b64_json"]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/sizes")
 def get_sizes():
