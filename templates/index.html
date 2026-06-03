@@ -3,514 +3,445 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creative Preview Engine</title>
+<title>Creative Studio · Cars24</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424;
-    --border: #2e2e2e; --border2: #3a3a3a;
-    --text: #f0f0f0; --text2: #888; --text3: #555;
-    --accent: #d4ff3e; --accent-dim: rgba(212,255,62,0.10); --accent-text: #0f0f0f;
-    --red: #ff4545; --green: #3effa0;
-    --radius: 10px; --radius-sm: 6px;
-  }
-  body { background:var(--bg); color:var(--text); font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
-
-  header { display:flex; align-items:center; justify-content:space-between; padding:0 32px; height:56px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:100; }
-  .logo { display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600; letter-spacing:-0.3px; }
-  .logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .badge { background:var(--accent-dim); color:var(--accent); font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.5px; text-transform:uppercase; }
-
-  main { display:flex; flex:1; overflow:hidden; }
-
-  aside { width:280px; min-width:280px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 20px; gap:24px; overflow-y:auto; }
-  .section-label { font-size:10px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
-
-  #dropzone { border:1.5px dashed var(--border2); border-radius:var(--radius); padding:28px 16px; text-align:center; cursor:pointer; transition:all 0.2s; background:var(--surface2); }
-  #dropzone:hover, #dropzone.drag-over { border-color:var(--accent); background:var(--accent-dim); }
-  #dropzone svg { margin-bottom:10px; opacity:0.5; transition:opacity 0.2s; }
-  #dropzone:hover svg, #dropzone.drag-over svg { opacity:1; }
-  .dz-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px; }
-  .dz-sub { font-size:11px; color:var(--text2); }
-  #fileInput { display:none; }
-
-  #fileList { display:flex; flex-direction:column; gap:8px; }
-  .file-item { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px; cursor:pointer; transition:all 0.15s; }
-  .file-item:hover { border-color:var(--border2); }
-  .file-item.active { border-color:var(--accent); background:var(--accent-dim); }
-  .file-thumb { width:36px; height:36px; border-radius:4px; object-fit:cover; background:var(--border); flex-shrink:0; }
-  .file-info { flex:1; min-width:0; }
-  .file-name { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .file-meta { font-size:10px; color:var(--text2); margin-top:2px; }
-  .file-remove { width:20px; height:20px; background:none; border:none; color:var(--text3); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; border-radius:4px; flex-shrink:0; }
-  .file-remove:hover { color:var(--red); background:rgba(255,69,69,0.1); }
-
-  .size-grid { display:flex; flex-direction:column; gap:6px; }
-  .size-toggle { display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 12px; cursor:pointer; transition:all 0.15s; user-select:none; }
-  .size-toggle:hover { border-color:var(--border2); }
-  .size-toggle.active { border-color:var(--accent); }
-  .size-toggle-left { display:flex; flex-direction:column; gap:2px; }
-  .size-name { font-size:12px; font-weight:600; }
-  .size-dims { font-size:10px; color:var(--text2); }
-  .toggle-switch { width:28px; height:16px; background:var(--border2); border-radius:8px; position:relative; transition:background 0.2s; flex-shrink:0; }
-  .size-toggle.active .toggle-switch { background:var(--accent); }
-  .toggle-switch::after { content:''; position:absolute; top:2px; left:2px; width:12px; height:12px; background:#fff; border-radius:50%; transition:transform 0.2s; }
-  .size-toggle.active .toggle-switch::after { transform:translateX(12px); }
-
-  .format-row { display:flex; gap:6px; }
-  .fmt-btn { flex:1; padding:7px 0; font-size:11px; font-weight:600; border-radius:var(--radius-sm); cursor:pointer; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); transition:all 0.15s; text-transform:uppercase; letter-spacing:0.5px; }
-  .fmt-btn.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
-  .format-note { font-size:10px; color:var(--text3); margin-top:6px; line-height:1.5; }
-
-  .sidebar-actions { display:flex; flex-direction:column; gap:8px; margin-top:auto; }
-  .btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 16px; border-radius:var(--radius-sm); font-size:13px; font-weight:600; cursor:pointer; border:none; transition:all 0.15s; width:100%; }
-  .btn-primary { background:var(--accent); color:var(--accent-text); }
-  .btn-primary:hover { background:#c8f030; }
-  .btn-primary:disabled { opacity:0.4; cursor:not-allowed; }
-  .btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border2); }
-  .btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
-
-  #preview-area { flex:1; overflow-y:auto; padding:32px; background:var(--bg); }
-  #empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; color:var(--text3); }
-  #empty-state svg { opacity:0.3; }
-  #empty-state p { font-size:14px; }
-  #empty-state span { font-size:12px; }
-
-  .preview-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; flex-wrap:wrap; gap:12px; }
-  .preview-title { font-size:16px; font-weight:600; }
-  .preview-sub { font-size:12px; color:var(--text2); margin-top:2px; }
-  .preview-header-right { display:flex; align-items:center; gap:8px; }
-  .view-controls { display:flex; gap:6px; }
-  .view-btn { padding:6px 12px; font-size:11px; font-weight:600; border-radius:var(--radius-sm); cursor:pointer; border:1px solid var(--border2); background:none; color:var(--text2); transition:all 0.15s; text-transform:uppercase; letter-spacing:0.5px; }
-  .view-btn.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
-
-  #sizes-container { display:grid; gap:24px; }
-  #sizes-container.grid-2 { grid-template-columns:repeat(2,1fr); }
-  #sizes-container.grid-1 { grid-template-columns:1fr; }
-
-  .size-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:border-color 0.15s; }
-  .size-card:hover { border-color:var(--border2); }
-  .size-card-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--border); }
-  .size-card-title { font-size:13px; font-weight:700; }
-  .size-card-meta { display:flex; align-items:center; gap:8px; }
-  .size-card-dims { font-size:11px; color:var(--text2); background:var(--surface2); padding:3px 8px; border-radius:4px; font-family:'SF Mono','Fira Code',monospace; }
-
-  .size-card-body { padding:20px; display:flex; align-items:center; justify-content:center; background:repeating-conic-gradient(#1e1e1e 0% 25%,#1a1a1a 0% 50%) 0 0/20px 20px; min-height:80px; position:relative; }
-  .preview-frame { position:relative; overflow:hidden; display:block; cursor:zoom-in; }
-
-  /* The image inside preview-frame uses object-fit:contain + scale to width */
-  .preview-frame img {
-    display:block;
-    width:100%;
-    height:100%;
-    object-fit:contain;
-    object-position:top center;
-  }
-
-  /* Transparent area indicator */
-  .preview-frame.has-transparent { background: repeating-conic-gradient(#333 0% 25%, #2a2a2a 0% 50%) 0 0/10px 10px; }
-
-  .scale-tag { position:absolute; bottom:6px; right:8px; font-size:9px; font-weight:700; color:rgba(255,255,255,0.5); background:rgba(0,0,0,0.6); padding:2px 5px; border-radius:3px; font-family:'SF Mono','Fira Code',monospace; }
-
-  .size-card-footer { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--border); gap:8px; }
-  .footer-left { display:flex; flex-direction:column; gap:2px; }
-  .gam-label { font-size:10px; color:var(--text3); font-family:'SF Mono','Fira Code',monospace; }
-  .fit-label { font-size:10px; color:var(--text2); }
-
-  .footer-actions { display:flex; gap:6px; flex-shrink:0; }
-  .icon-btn { font-size:10px; font-weight:600; color:var(--text2); background:none; border:1px solid var(--border2); border-radius:4px; padding:3px 8px; cursor:pointer; transition:all 0.15s; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; display:flex; align-items:center; gap:4px; }
-  .icon-btn:hover { color:var(--accent); border-color:var(--accent); }
-  .icon-btn.copied { color:var(--green); border-color:var(--green); background:rgba(62,255,160,0.08); }
-  .icon-btn.downloading { opacity:0.5; pointer-events:none; }
-
-  /* ZOOM */
-  #zoom-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:999; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
-  #zoom-overlay.show { display:flex; }
-  #zoom-box { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); padding:20px; max-width:95vw; max-height:90vh; overflow:auto; display:flex; flex-direction:column; gap:12px; }
-  #zoom-header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-  #zoom-title { font-size:14px; font-weight:700; }
-  #zoom-close { background:none; border:none; color:var(--text2); cursor:pointer; font-size:22px; line-height:1; flex-shrink:0; }
-  #zoom-close:hover { color:var(--text); }
-  #zoom-img { display:block; max-width:100%; border:1px solid var(--border); }
-  #zoom-meta { font-size:11px; color:var(--text2); font-family:'SF Mono','Fira Code',monospace; }
-  #zoom-note { font-size:11px; color:var(--text3); font-style:italic; }
-
-  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface); border:1px solid var(--border2); color:var(--text); font-size:12px; font-weight:600; padding:10px 20px; border-radius:20px; opacity:0; pointer-events:none; transition:all 0.3s; z-index:9999; white-space:nowrap; }
-  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-  #toast.error { border-color:var(--red); color:var(--red); }
-  #toast.success { border-color:var(--green); color:var(--green); }
-
-  ::-webkit-scrollbar { width:6px; height:6px; }
-  ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
-  .no-files-hint { font-size:11px; color:var(--text3); text-align:center; padding:8px 0; }
-  .gif-badge { font-size:9px; font-weight:700; background:rgba(212,255,62,0.15); color:var(--accent); padding:2px 5px; border-radius:3px; margin-left:6px; letter-spacing:0.5px; }
-
-  /* progress */
-  .progress-wrap { height:2px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; display:none; }
-  .progress-bar { height:100%; background:var(--accent); width:0%; transition:width 0.4s; border-radius:2px; }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--surface:#1a1a1a;--surface2:#222;
+  --border:#2a2a2a;--border2:#383838;
+  --text:#f0f0f0;--text2:#888;--text3:#555;
+  --accent:#d4ff3e;--accent-dim:rgba(212,255,62,0.09);--accent-text:#0f0f0f;
+  --green:#3effa0;--red:#ff4545;
+  --r:10px;--rsm:7px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:54px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600}
+.dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
+.badge{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--green);color:var(--green)}
+.steps{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.step{flex:1;padding:10px 0;text-align:center;font-size:11px;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;letter-spacing:0.3px}
+.step.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+.step.done{color:var(--text2)}
+main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
+.panel{display:none}.panel.active{display:block}
+.lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
+.uz{border:1.5px dashed var(--border2);border-radius:var(--r);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface2)}
+.uz:hover,.uz.drag{border-color:var(--accent);background:var(--accent-dim)}
+.uz.done{border-style:solid;border-color:var(--green)}
+.uz .icon{font-size:32px;margin-bottom:10px}
+.uz p{font-size:13px;color:var(--text);margin-bottom:3px}
+.uz .sub{font-size:11px;color:var(--text2)}
+.extracted{display:none;margin-top:14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:14px}
+.ep-top{display:flex;gap:14px;align-items:flex-start}
+.kv-thumb{width:90px;height:90px;object-fit:cover;border-radius:6px;border:1px solid var(--border2);flex-shrink:0}
+.kv-name{font-size:13px;font-weight:600;color:var(--green);margin-bottom:4px}
+.kv-meta{font-size:11px;color:var(--text2);line-height:1.7}
+.file-list{margin-top:10px;border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+.file-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+.ft{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.ft-img{background:rgba(62,255,160,0.12);color:var(--green)}
+.ft-ai{background:var(--accent-dim);color:var(--accent)}
+.ft-other{background:rgba(255,255,255,0.05);color:var(--text3)}
+.warn{background:rgba(255,69,69,0.08);border:1px solid rgba(255,69,69,0.25);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:var(--red);margin-top:10px;display:none}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;color:var(--text2);font-weight:600}
+.fg input,.fg textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);color:var(--text);font-size:13px;padding:9px 12px;width:100%}
+.fg input:focus,.fg textarea:focus{outline:none;border-color:var(--accent)}
+.fg textarea{height:72px;resize:none;line-height:1.5}
+.helper{font-size:10px;color:var(--text3);margin-top:3px;font-style:italic}
+.sz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:8px}
+.sz{padding:9px 11px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s;user-select:none}
+.sz:hover{border-color:var(--border2)}
+.sz.on{border-color:var(--accent);background:var(--accent-dim)}
+.sz .sn{font-size:12px;font-weight:600}
+.sz .sd{font-size:9px;color:var(--text2);font-family:monospace;margin-top:2px}
+.sz .st{font-size:8px;padding:1px 5px;border-radius:3px;margin-top:4px;display:inline-block;font-weight:700}
+.st-gam{background:var(--accent-dim);color:var(--accent)}
+.st-meta{background:rgba(59,130,246,0.12);color:#60a5fa}
+.btn-row{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.btn{display:flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--rsm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all 0.15s}
+.btn:hover{background:var(--surface2)}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.btn.primary:hover{background:#c8f030}
+.btn.primary:disabled{background:var(--accent);opacity:0.35}
+.btn.sm{font-size:11px;padding:6px 13px}
+.gen-wrap{text-align:center;padding:40px 20px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)}
+.gen-steps{display:flex;flex-direction:column;gap:8px;max-width:400px;margin:22px auto 0}
+.gs{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--rsm);background:var(--surface2);font-size:12px;color:var(--text3);transition:all 0.3s}
+.gs.run{color:var(--text);background:var(--accent-dim);border:1px solid rgba(212,255,62,0.25)}
+.gs.done{color:var(--text2)}
+.gs .ico{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+.spinner{width:16px;height:16px;border:2px solid rgba(212,255,62,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.copy-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:14px 16px;margin-bottom:16px}
+.cb-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:8px}
+.cb-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border)}
+.cb-row:last-child{border:none}
+.cb-k{font-size:11px;color:var(--text2)}
+.cb-v{font-size:12px;font-weight:600;text-align:right;max-width:55%;color:var(--text)}
+.kv-used{font-size:11px;background:rgba(62,255,160,0.06);border:1px solid rgba(62,255,160,0.2);border-radius:var(--rsm);padding:9px 12px;color:var(--text2);margin-bottom:16px;line-height:1.5}
+.kv-used strong{color:var(--green)}
+.res-header{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.rc-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.rc-title{font-size:12px;font-weight:700}
+.rc-dims{font-size:10px;color:var(--text2);font-family:monospace}
+.rc-img{background:repeating-conic-gradient(#1e1e1e 0% 25%,#1a1a1a 0% 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;min-height:100px}
+.rc-img img{display:block;max-width:100%;max-height:220px;object-fit:contain}
+.rc-ft{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border)}
+.rc-gam{font-size:9px;color:var(--text3);font-family:monospace}
+.dl-btn{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2);background:none;border:1px solid var(--border2);border-radius:5px;padding:4px 9px;cursor:pointer;transition:all 0.15s}
+.dl-btn:hover{border-color:var(--accent);color:var(--text)}
+.err{background:rgba(255,69,69,0.08);border:1px solid rgba(255,69,69,0.25);border-radius:var(--rsm);padding:11px 14px;font-size:12px;color:var(--red);margin-top:12px;display:none}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="logo"><div class="logo-dot"></div>Creative Preview Engine</div>
-  <span class="badge">GAM Ready</span>
+  <div class="logo"><div class="dot"></div>Creative Studio · Cars24</div>
+  <span class="badge">✓ All APIs server-side</span>
 </header>
-
+<div class="steps">
+  <div class="step active" id="s1" onclick="goStep(1)">1 · Upload KV</div>
+  <div class="step" id="s2" onclick="goStep(2)">2 · Brief</div>
+  <div class="step" id="s3" onclick="goStep(3)">3 · Sizes</div>
+  <div class="step" id="s4">4 · Generate</div>
+</div>
 <main>
-  <aside>
-    <div>
-      <div class="section-label">Upload Creative</div>
-      <div id="dropzone" onclick="document.getElementById('fileInput').click()">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div class="dz-title">Drop files here</div>
-        <div class="dz-sub">JPG · PNG · GIF (animated supported)</div>
-      </div>
-      <div class="progress-wrap" id="uploadProgress"><div class="progress-bar" id="uploadBar"></div></div>
-      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/gif" multiple>
-    </div>
 
-    <div>
-      <div class="section-label">Files <span id="file-count" style="color:var(--text2);font-weight:400;text-transform:none;letter-spacing:0"></span></div>
-      <div id="fileList"><div class="no-files-hint">No files uploaded yet</div></div>
-    </div>
-
-    <div>
-      <div class="section-label">Ad Sizes</div>
-      <div class="size-grid" id="sizeGrid"></div>
-    </div>
-
-    <div>
-      <div class="section-label">Output Format</div>
-      <div class="format-row">
-        <button class="fmt-btn active" data-fmt="png" onclick="setFormat('png',this)">PNG</button>
-        <button class="fmt-btn" data-fmt="jpg" onclick="setFormat('jpg',this)">JPG</button>
-      </div>
-      <div class="format-note">Fit to width · Original ratio preserved · Transparent fill for PNG, white for JPG · Animated GIFs always export as GIF</div>
-    </div>
-
-    <div class="sidebar-actions">
-      <button class="btn btn-primary" id="downloadAllBtn" disabled onclick="downloadAll()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download All Sizes
-      </button>
-      <button class="btn btn-secondary" onclick="copyAllSpecs()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Copy GAM Specs
-      </button>
-    </div>
-  </aside>
-
-  <div id="preview-area">
-    <div id="empty-state">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      <p>Upload a creative to preview all sizes</p>
-      <span>Fit to width · Ratio preserved · JPG / PNG / animated GIF</span>
-    </div>
-    <div id="preview-content" style="display:none">
-      <div class="preview-header">
-        <div>
-          <div class="preview-title" id="preview-filename">—</div>
-          <div class="preview-sub" id="preview-diminfo">—</div>
-        </div>
-        <div class="preview-header-right">
-          <div class="view-controls">
-            <button class="view-btn active" onclick="setView(2)">2 Col</button>
-            <button class="view-btn" onclick="setView(1)">1 Col</button>
-          </div>
-        </div>
-      </div>
-      <div id="sizes-container" class="grid-2"></div>
-    </div>
+<!-- STEP 1 -->
+<div class="panel active" id="p1">
+  <div class="lbl">Open File (Design Team ZIP or JPG/PNG)</div>
+  <div class="uz" id="uzZone"
+    onclick="document.getElementById('fileInp').click()"
+    ondragover="event.preventDefault();this.classList.add('drag')"
+    ondragleave="this.classList.remove('drag')"
+    ondrop="this.classList.remove('drag');handleDrop(event)">
+    <div class="icon">📦</div>
+    <p>Drop your design team ZIP here</p>
+    <div class="sub">Engine auto-extracts the KV image · Also accepts JPG/PNG directly</div>
   </div>
-</main>
-
-<div id="zoom-overlay" onclick="closeZoom(event)">
-  <div id="zoom-box">
-    <div id="zoom-header">
-      <span id="zoom-title"></span>
-      <button id="zoom-close" onclick="closeZoom()">×</button>
+  <input type="file" id="fileInp" accept=".zip,image/jpeg,image/png" style="display:none" onchange="handleFileInput(event)">
+  <div class="warn" id="noImgWarn"></div>
+  <div class="extracted" id="epWrap">
+    <div class="ep-top">
+      <img class="kv-thumb" id="kvThumb" src="" alt="KV">
+      <div>
+        <div class="kv-name" id="kvName"></div>
+        <div class="kv-meta" id="kvMeta"></div>
+      </div>
     </div>
-    <img id="zoom-img" src="" alt="">
-    <div id="zoom-meta"></div>
-    <div id="zoom-note">Preview shows browser-scaled version. Download for exact pixel output.</div>
+    <div class="file-list" id="fileList"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn primary" id="n1" disabled onclick="goStep(2)">Next: Campaign Brief →</button>
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- STEP 2 -->
+<div class="panel" id="p2">
+  <div class="lbl">Campaign Brief</div>
+  <div class="card">
+    <div class="r2">
+      <div class="fg"><label>Car model *</label><input id="carModel" placeholder="e.g. Tata Tiago EV" oninput="chk2()"></div>
+      <div class="fg"><label>CTA *</label><input id="ctaText" placeholder="e.g. Book a Test Drive" oninput="chk2()"></div>
+      <div class="fg"><label>Target audience</label><input id="audience" placeholder="e.g. First-time EV buyers, 25–40, urban India"></div>
+      <div class="fg"><label>Offer / price</label><input id="offer" placeholder="e.g. Starting ₹8.49L · EMI ₹9,999/mo"></div>
+      <div class="fg full"><label>Campaign theme</label><textarea id="theme" placeholder="e.g. Make the switch to electric. Zero compromise on range, style, or price."></textarea></div>
+      <div class="fg full">
+        <label>Style notes <span style="font-weight:400;color:var(--text3)">(optional — Claude reads your KV automatically)</span></label>
+        <textarea id="styleNotes" placeholder="e.g. Keep Tata blue prominent. CTA button bottom-right."></textarea>
+        <div class="helper">Claude will analyse your KV image for colours, layout and mood before generating.</div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="goStep(1)">← Back</button>
+    <button class="btn primary" id="n2" disabled onclick="goStep(3)">Next: Select Sizes →</button>
+  </div>
+</div>
 
+<!-- STEP 3 -->
+<div class="panel" id="p3">
+  <div class="lbl">Output Sizes</div>
+  <div class="sz-grid" id="sizeGrid"></div>
+  <div style="display:flex;gap:8px;margin-top:10px">
+    <button class="btn sm" onclick="allSz(true)">Select all</button>
+    <button class="btn sm" onclick="allSz(false)">Clear all</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="goStep(2)">← Back</button>
+    <button class="btn primary" onclick="generate()">✦ Generate creatives</button>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="panel" id="p4">
+  <div id="genWrap" style="display:none">
+    <div class="gen-wrap">
+      <div style="font-size:15px;font-weight:600">Generating your creatives</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">30–90 seconds</div>
+      <div class="gen-steps">
+        <div class="gs" id="g1"><span class="ico">📦</span><span>KV extracted from ZIP</span></div>
+        <div class="gs" id="g2"><span class="ico">👁</span><span>Claude analysing KV style and colours...</span></div>
+        <div class="gs" id="g3"><span class="ico">✍️</span><span>Writing copy from brief...</span></div>
+        <div class="gs" id="g4"><span class="ico">✨</span><span>GPT-4o generating visual with KV reference...</span></div>
+        <div class="gs" id="g5"><span class="ico">📐</span><span>Resizing to all selected formats...</span></div>
+        <div class="gs" id="g6"><span class="ico">📦</span><span>Packaging output...</span></div>
+      </div>
+      <div class="err" id="genErr"></div>
+    </div>
+  </div>
+  <div id="resWrap" style="display:none">
+    <div class="copy-box" id="copyBox"></div>
+    <div class="kv-used" id="kvUsed"></div>
+    <div class="res-header">
+      <button class="btn sm" onclick="goStep(1)">← New creative</button>
+      <button class="btn primary sm" onclick="dlAll()">⬇ Download all (ZIP)</button>
+    </div>
+    <div class="res-grid" id="resGrid"></div>
+  </div>
+</div>
+
+</main>
 <script>
-const GAM_SIZES = [
-  {name:'Billboard',       w:970,h:250,gam:'970x250'},
-  {name:'Filmstrip',       w:560,h:320,gam:'560x320'},
-  {name:'Mobile Banner',   w:320,h:100,gam:'320x100'},
-  {name:'Leaderboard',     w:970,h:90, gam:'970x90'},
-  {name:'Medium Rectangle',w:300,h:250,gam:'300x250'},
-  {name:'Half Page',       w:360,h:600,gam:'360x600'},
-  {name:'Wide Skyscraper', w:300,h:600,gam:'300x600'},
+const SIZES=[
+  {n:'Billboard',      w:970, h:250,  g:'970x250',  t:'gam'},
+  {n:'Filmstrip',      w:560, h:320,  g:'560x320',  t:'gam'},
+  {n:'Mobile Banner',  w:320, h:100,  g:'320x100',  t:'gam'},
+  {n:'Leaderboard',    w:970, h:90,   g:'970x90',   t:'gam'},
+  {n:'Med Rectangle',  w:300, h:250,  g:'300x250',  t:'gam'},
+  {n:'Half Page',      w:360, h:600,  g:'360x600',  t:'gam'},
+  {n:'Wide Skysc.',    w:300, h:600,  g:'300x600',  t:'gam'},
+  {n:'Meta Square',    w:1080,h:1080, g:'1080x1080',t:'meta'},
+  {n:'Meta Story',     w:1080,h:1920, g:'1080x1920',t:'meta'},
+  {n:'Meta Landscape', w:1200,h:628,  g:'1200x628', t:'meta'},
 ];
-const MAX_W = 820, MAX_H = 420;
-let files = [], activeIndex = -1;
-let enabledSizes = new Set(GAM_SIZES.map(s=>s.gam));
-let outputFormat = 'png';
+const BASE = '';  // same origin — served from Railway
+let sel=new Set(SIZES.map(s=>s.g));
+let kvB64=null,kvMime=null,kvFileName='';
+let results=[],copyData=null,kvAnalysis='';
 
-// Build size toggles
-const sizeGrid = document.getElementById('sizeGrid');
-GAM_SIZES.forEach(s => {
-  const div = document.createElement('div');
-  div.className = 'size-toggle active';
-  div.dataset.gam = s.gam;
-  div.innerHTML = `<div class="size-toggle-left"><div class="size-name">${s.name}</div><div class="size-dims">${s.w} × ${s.h}px</div></div><div class="toggle-switch"></div>`;
-  div.addEventListener('click', () => {
-    if (enabledSizes.has(s.gam)) { enabledSizes.delete(s.gam); div.classList.remove('active'); }
-    else { enabledSizes.add(s.gam); div.classList.add('active'); }
-    if (activeIndex >= 0) renderPreviews(activeIndex);
+(function(){
+  const g=document.getElementById('sizeGrid');
+  SIZES.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='sz on';d.dataset.g=s.g;
+    d.innerHTML=`<div class="sn">${s.n}</div><div class="sd">${s.w}×${s.h}</div><span class="st st-${s.t}">${s.t.toUpperCase()}</span>`;
+    d.onclick=()=>{sel.has(s.g)?sel.delete(s.g):sel.add(s.g);d.classList.toggle('on',sel.has(s.g));};
+    g.appendChild(d);
   });
-  sizeGrid.appendChild(div);
-});
+})();
 
-function setFormat(fmt, btn) {
-  outputFormat = fmt;
-  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+function allSz(v){sel=v?new Set(SIZES.map(s=>s.g)):new Set();document.querySelectorAll('.sz').forEach(c=>c.classList.toggle('on',v));}
+
+function goStep(n){
+  for(let i=1;i<=4;i++){
+    document.getElementById('p'+i).classList.toggle('active',i===n);
+    const s=document.getElementById('s'+i);
+    if(s){s.classList.toggle('active',i===n);s.classList.toggle('done',i<n);}
+  }
 }
 
-// Drag & drop
-const dz = document.getElementById('dropzone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
-document.getElementById('fileInput').addEventListener('change', e => handleFiles(e.target.files));
+function chk1(){document.getElementById('n1').disabled=!kvB64;}
+function chk2(){document.getElementById('n2').disabled=!(document.getElementById('carModel').value.trim()&&document.getElementById('ctaText').value.trim());}
 
-function handleFiles(rawFiles) {
-  const allowed = ['image/jpeg','image/png','image/gif'];
-  Array.from(rawFiles).forEach(f => {
-    if (!allowed.includes(f.type)) { showToast('Unsupported format: '+f.name, 'error'); return; }
-    if (files.find(x => x.file.name===f.name && x.file.size===f.size)) return;
-    const url = URL.createObjectURL(f);
-    const img = new Image();
-    img.onload = () => {
-      const isGif = f.name.toLowerCase().endsWith('.gif');
-      files.push({file:f, url, w:img.naturalWidth, h:img.naturalHeight, isGif});
-      renderFileList();
-      if (files.length===1) selectFile(0);
-    };
-    img.src = url;
-  });
-  document.getElementById('fileInput').value='';
+function handleDrop(ev){ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)processFile(f);}
+function handleFileInput(ev){const f=ev.target.files[0];if(f)processFile(f);ev.target.value='';}
+
+async function processFile(file){
+  document.getElementById('noImgWarn').style.display='none';
+  if(file.type.startsWith('image/')){
+    await loadImgFile(file,[{name:file.name,type:'img'}]);
+  } else if(file.name.toLowerCase().endsWith('.zip')){
+    await extractZip(file);
+  } else {
+    showWarn('Please upload a ZIP or a JPG/PNG image.');
+  }
 }
 
-function renderFileList() {
-  const list = document.getElementById('fileList');
-  document.getElementById('file-count').textContent = `(${files.length})`;
-  if (!files.length) { list.innerHTML='<div class="no-files-hint">No files uploaded yet</div>'; return; }
-  list.innerHTML='';
-  files.forEach((f,i) => {
-    const div = document.createElement('div');
-    div.className='file-item'+(i===activeIndex?' active':'');
-    div.innerHTML=`
-      <img class="file-thumb" src="${f.url}" alt="">
-      <div class="file-info">
-        <div class="file-name">${f.file.name}${f.isGif?'<span class="gif-badge">GIF</span>':''}</div>
-        <div class="file-meta">${f.w}×${f.h}px · ${fmtSize(f.file.size)}</div>
-      </div>
-      <button class="file-remove">×</button>`;
-    div.addEventListener('click', e => { if (!e.target.classList.contains('file-remove')) selectFile(i); });
-    div.querySelector('.file-remove').addEventListener('click', e => { e.stopPropagation(); removeFile(i); });
-    list.appendChild(div);
-  });
-  document.getElementById('downloadAllBtn').disabled = files.length===0;
+async function loadImgFile(file,entries){
+  const url=await readDataUrl(file);
+  kvB64=url.split(',')[1];kvMime=file.type;kvFileName=file.name;
+  const img=await loadImg(url);
+  showExtracted(url,file.name,`${(file.size/1024).toFixed(0)} KB · ${img.naturalWidth}×${img.naturalHeight}px`,entries);
+  chk1();
 }
 
-function selectFile(i) { activeIndex=i; renderFileList(); renderPreviews(i); }
-
-function removeFile(i) {
-  URL.revokeObjectURL(files[i].url);
-  files.splice(i,1);
-  if (activeIndex>=files.length) activeIndex=files.length-1;
-  renderFileList();
-  if (activeIndex>=0) renderPreviews(activeIndex); else showEmpty();
+async function extractZip(file){
+  const zone=document.getElementById('uzZone');
+  zone.querySelector('p').textContent='Reading ZIP...';
+  try{
+    const ab=await file.arrayBuffer();
+    const zip=await JSZip.loadAsync(ab);
+    const allNames=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
+    const imgExts=['.jpg','.jpeg','.png'];
+    const imgFiles=allNames.filter(n=>imgExts.some(e=>n.toLowerCase().endsWith(e)));
+    if(!imgFiles.length){
+      zone.querySelector('p').textContent='Drop your design team ZIP here';
+      showWarn('No JPG or PNG found in the ZIP.');
+      return;
+    }
+    const preferred=imgFiles.find(n=>/(link|export|output|render)/i.test(n))||imgFiles[0];
+    const blob=await zip.files[preferred].async('blob');
+    const mime=preferred.toLowerCase().endsWith('.png')?'image/png':'image/jpeg';
+    const imgFile=new File([blob],preferred.split('/').pop(),{type:mime});
+    const entries=allNames.map(n=>({
+      name:n.split('/').pop(),
+      type:['.jpg','.jpeg','.png'].some(e=>n.toLowerCase().endsWith(e))?'img':n.toLowerCase().endsWith('.ai')?'ai':'other'
+    }));
+    zone.classList.add('done');
+    zone.querySelector('p').textContent=file.name;
+    zone.querySelector('.sub').textContent=`${allNames.length} files · KV auto-extracted · click to change`;
+    await loadImgFile(imgFile,entries);
+  }catch(e){
+    zone.querySelector('p').textContent='Drop your design team ZIP here';
+    showWarn('Could not read ZIP: '+e.message);
+  }
 }
 
-function showEmpty() {
-  document.getElementById('empty-state').style.display='flex';
-  document.getElementById('preview-content').style.display='none';
+function showExtracted(url,name,meta,files){
+  const w=document.getElementById('epWrap');w.style.display='block';
+  document.getElementById('kvThumb').src=url;
+  document.getElementById('kvName').textContent='✓ KV found: '+name;
+  document.getElementById('kvMeta').textContent=meta;
+  document.getElementById('fileList').innerHTML=files.slice(0,10).map(f=>`
+    <div class="file-row"><span>${f.name}</span>
+    <span class="ft ft-${f.type}">${f.type==='img'?'KV image':f.type==='ai'?'Illustrator':'file'}</span></div>`).join('');
 }
 
-function renderPreviews(i) {
-  const f=files[i]; if (!f) { showEmpty(); return; }
-  document.getElementById('empty-state').style.display='none';
-  document.getElementById('preview-content').style.display='block';
-  document.getElementById('preview-filename').textContent=f.file.name;
+function showWarn(msg){const e=document.getElementById('noImgWarn');e.textContent=msg;e.style.display='block';}
+function readDataUrl(file){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.onerror=j;fr.readAsDataURL(file);});}
+function loadImg(src){return new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src;});}
 
-  // Calculate scaled height based on fit-to-width logic for display info
-  document.getElementById('preview-diminfo').textContent=
-    `Original: ${f.w}×${f.h}px · ${fmtSize(f.file.size)} · Output: fit to width, ratio preserved`;
+async function generate(){
+  goStep(4);
+  document.getElementById('genWrap').style.display='block';
+  document.getElementById('resWrap').style.display='none';
+  document.getElementById('genErr').style.display='none';
+  const brief={
+    model:document.getElementById('carModel').value.trim(),
+    cta:document.getElementById('ctaText').value.trim(),
+    aud:document.getElementById('audience').value.trim(),
+    offer:document.getElementById('offer').value.trim(),
+    theme:document.getElementById('theme').value.trim(),
+    style:document.getElementById('styleNotes').value.trim(),
+  };
+  const icons=['📦','👁','✍️','✨','📐','📦'];
+  function gStep(n,state){
+    const el=document.getElementById('g'+n);
+    el.className='gs'+(state?' '+state:'');
+    if(state==='run'){
+      const sp=document.createElement('div');sp.className='spinner';
+      const cur=el.querySelector('.ico,.spinner');
+      if(cur)el.replaceChild(sp,cur);else el.insertBefore(sp,el.firstChild);
+    } else {
+      const ic=document.createElement('span');ic.className='ico';ic.textContent=icons[n-1];
+      const cur=el.querySelector('.ico,.spinner');
+      if(cur)el.replaceChild(ic,cur);else el.insertBefore(ic,el.firstChild);
+    }
+  }
+  try{
+    gStep(1,'done');
+    gStep(2,'run');
+    const r1=await fetch('/api/analyse-kv',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({image_b64:kvB64,mime:kvMime,car_model:brief.model})});
+    const d1=await r1.json();
+    if(d1.error)throw new Error(d1.error);
+    kvAnalysis=d1.analysis;
+    gStep(2,'done');
 
-  const container=document.getElementById('sizes-container');
-  container.innerHTML='';
+    gStep(3,'run');
+    const r2=await fetch('/api/write-copy',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({brief,analysis:kvAnalysis})});
+    const d2=await r2.json();
+    if(d2.error)throw new Error(d2.error);
+    copyData=d2;
+    gStep(3,'done');
 
-  GAM_SIZES.filter(s=>enabledSizes.has(s.gam)).forEach(s=>{
-    // Fit to width: scale image so width = s.w, then place on canvas s.w x s.h
-    const imgScale = s.w / f.w;
-    const scaledH = Math.round(f.h * imgScale);
-    const fillPct = Math.min(100, Math.round((scaledH / s.h) * 100));
+    gStep(4,'run');
+    const prompt=`Professional automotive advertisement for the ${brief.model}.
+Style reference (replicate closely): ${kvAnalysis}
+${brief.style?'Additional notes: '+brief.style:''}
+Hero: ${brief.model} prominently featured. Include text: "${copyData.headline}" as headline, "${copyData.subheadline}" as subline, "${copyData.cta}" as CTA button.
+Replicate colour palette, background, typography hierarchy from style reference. High production value, magazine quality.`;
+    const r3=await fetch('/api/generate-image',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})});
+    const d3=await r3.json();
+    if(d3.error)throw new Error(d3.error);
+    const imgUrl='data:image/png;base64,'+d3.b64_json;
+    gStep(4,'done');
 
-    // Preview display scaling
-    const dispScale = Math.min(1, MAX_W / s.w, MAX_H / s.h);
-    const dispW = Math.round(s.w * dispScale);
-    const dispH = Math.round(s.h * dispScale);
-    const scaledDispH = Math.round(scaledH * dispScale);
-    const pct = Math.round(dispScale * 100);
-    const hasTransparent = scaledH < s.h && outputFormat === 'png';
+    gStep(5,'run');
+    const img=await loadImg(imgUrl);
+    results=Array.from(sel).map(g=>{
+      const s=SIZES.find(x=>x.g===g);if(!s)return null;
+      const c=document.createElement('canvas');c.width=s.w;c.height=s.h;
+      const ctx=c.getContext('2d');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,s.w,s.h);
+      const scale=s.w/img.width;
+      ctx.drawImage(img,0,0,s.w,Math.round(img.height*scale));
+      return{...s,dataUrl:c.toDataURL('image/png',0.92)};
+    }).filter(Boolean);
+    gStep(5,'done');
 
-    const card = document.createElement('div');
-    card.className = 'size-card';
-    card.innerHTML = `
-      <div class="size-card-header">
-        <span class="size-card-title">${s.name}</span>
-        <div class="size-card-meta">
-          <span class="size-card-dims">${s.w} × ${s.h}</span>
-        </div>
-      </div>
-      <div class="size-card-body">
-        <div class="preview-frame${hasTransparent?' has-transparent':''}"
-          style="width:${dispW}px;height:${dispH}px"
-          title="Click to zoom">
-          <img src="${f.url}"
-            style="width:${dispW}px;height:${scaledDispH}px;object-fit:fill;object-position:top left;display:block;"
-            alt="${s.name}">
-          ${dispScale<1?`<div class="scale-tag">${pct}%</div>`:''}
-        </div>
-      </div>
-      <div class="size-card-footer">
-        <div class="footer-left">
-          <span class="gam-label">GAM: ${s.gam}</span>
-          <span class="fit-label">Image fills ${fillPct}% height${hasTransparent?' · transparent below':scaledH>s.h?' · cropped below':''}</span>
-        </div>
-        <div class="footer-actions">
-          <button class="icon-btn copy-spec-btn">Copy spec</button>
-          <button class="icon-btn dl-btn">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download
-          </button>
-        </div>
+    gStep(6,'run');
+    renderResults(copyData,results);
+    gStep(6,'done');
+    document.getElementById('genWrap').style.display='none';
+    document.getElementById('resWrap').style.display='block';
+  }catch(err){
+    const e=document.getElementById('genErr');
+    e.textContent='Error: '+(err.message||'Something went wrong.');
+    e.style.display='block';
+  }
+}
+
+function renderResults(copy,res){
+  document.getElementById('copyBox').innerHTML=`
+    <div class="cb-lbl">Generated copy</div>
+    <div class="cb-row"><span class="cb-k">Headline</span><span class="cb-v">${copy.headline}</span></div>
+    <div class="cb-row"><span class="cb-k">Subheadline</span><span class="cb-v">${copy.subheadline}</span></div>
+    <div class="cb-row"><span class="cb-k">Body</span><span class="cb-v">${copy.body}</span></div>
+    <div class="cb-row"><span class="cb-k">CTA</span><span class="cb-v">${copy.cta}</span></div>`;
+  document.getElementById('kvUsed').innerHTML=`<strong style="color:var(--green)">KV analysed:</strong> ${kvAnalysis}`;
+  const g=document.getElementById('resGrid');g.innerHTML='';
+  res.forEach(r=>{
+    const d=document.createElement('div');d.className='rc';
+    d.innerHTML=`
+      <div class="rc-hd"><span class="rc-title">${r.n}</span><span class="rc-dims">${r.w}×${r.h}</span></div>
+      <div class="rc-img"><img src="${r.dataUrl}" alt="${r.n}"></div>
+      <div class="rc-ft">
+        <span class="rc-gam">${r.g} · ${r.t.toUpperCase()}</span>
+        <button class="dl-btn" onclick="dlOne('${r.g}')">⬇ Download</button>
       </div>`;
-
-    card.querySelector('.preview-frame').addEventListener('click', () => openZoom(s.name, f.url, s.w, s.h, scaledH));
-    card.querySelector('.copy-spec-btn').addEventListener('click', e => {
-      const btn = e.target;
-      navigator.clipboard.writeText(`${s.name}: ${s.w}×${s.h}px | GAM: ${s.gam}`).then(() => {
-        btn.textContent='Copied!'; btn.classList.add('copied');
-        setTimeout(() => { btn.textContent='Copy spec'; btn.classList.remove('copied'); }, 1500);
-      });
-    });
-    card.querySelector('.dl-btn').addEventListener('click', e => {
-      downloadSingle(s, e.currentTarget);
-    });
-
-    container.appendChild(card);
+    g.appendChild(d);
   });
 }
 
-function setView(cols) {
-  document.getElementById('sizes-container').className = cols===2?'grid-2':'grid-1';
-  document.querySelectorAll('.view-btn').forEach((b,i) => b.classList.toggle('active', (cols===2&&i===0)||(cols===1&&i===1)));
+function dlOne(gam){
+  const r=results.find(x=>x.g===gam);if(!r)return;
+  const a=document.createElement('a');
+  a.href=r.dataUrl;
+  a.download=`${(document.getElementById('carModel').value||'creative').replace(/\s+/g,'-')}_${r.w}x${r.h}.png`;
+  a.click();
 }
 
-function openZoom(name, url, w, h, scaledH) {
-  document.getElementById('zoom-title').textContent = `${name} — ${w}×${h}px canvas`;
-  document.getElementById('zoom-img').src = url;
-  document.getElementById('zoom-img').style.width = Math.min(w, window.innerWidth*0.85)+'px';
-  document.getElementById('zoom-meta').textContent = `Canvas: ${w}×${h}px · Image renders at ${w}×${scaledH}px (fit to width)`;
-  document.getElementById('zoom-overlay').classList.add('show');
-}
-function closeZoom(e) {
-  if (!e||e.target===document.getElementById('zoom-overlay')||e.target.id==='zoom-close')
-    document.getElementById('zoom-overlay').classList.remove('show');
-}
-
-async function downloadSingle(size, btn) {
-  const f = files[activeIndex>=0?activeIndex:0];
-  if (!f) return;
-  btn.classList.add('downloading');
-  btn.innerHTML = '…';
-  const formData = new FormData();
-  formData.append('file', f.file);
-  formData.append('format', outputFormat);
-  formData.append('sizes', size.gam);
-  formData.append('single_size', '1');
-  try {
-    const resp = await fetch('/api/process', {method:'POST', body:formData});
-    if (!resp.ok) throw new Error('Server error');
-    const blob = await resp.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    const ext = f.isGif ? 'gif' : outputFormat;
-    a.download = `${f.file.name.replace(/\.[^.]+$/,'')}_${size.w}x${size.h}.${ext}`;
-    a.click();
-    showToast(`Downloaded ${size.gam}`, 'success');
-  } catch(err) {
-    showToast('Download failed', 'error');
-  } finally {
-    btn.classList.remove('downloading');
-    btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download';
-  }
-}
-
-async function downloadAll() {
-  if (!files.length) return;
-  const f = files[activeIndex>=0?activeIndex:0];
-  const activeSizes = GAM_SIZES.filter(s=>enabledSizes.has(s.gam));
-  if (!activeSizes.length) { showToast('No sizes selected','error'); return; }
-
-  const btn = document.getElementById('downloadAllBtn');
-  btn.disabled = true;
-  btn.textContent = 'Processing…';
-  showToast('Building ZIP on server…');
-
-  const formData = new FormData();
-  formData.append('file', f.file);
-  formData.append('format', outputFormat);
-  formData.append('sizes', activeSizes.map(s=>s.gam).join(','));
-
-  try {
-    const resp = await fetch('/api/process', {method:'POST', body:formData});
-    if (!resp.ok) { const err=await resp.json(); throw new Error(err.error||'Server error'); }
-    const blob = await resp.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${f.file.name.replace(/\.[^.]+$/,'')}_all-sizes.zip`;
-    a.click();
-    showToast('ZIP downloaded!', 'success');
-  } catch(err) {
-    showToast('Error: '+err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download All Sizes';
-  }
-}
-
-function copyAllSpecs() {
-  const lines = GAM_SIZES.filter(s=>enabledSizes.has(s.gam))
-    .map(s=>`${s.name}: ${s.w}×${s.h}px | GAM: ${s.gam}`).join('\n');
-  navigator.clipboard.writeText(lines).then(() => showToast('GAM specs copied'));
-}
-
-function fmtSize(b) {
-  if (b<1024) return b+' B';
-  if (b<1048576) return (b/1024).toFixed(1)+' KB';
-  return (b/1048576).toFixed(1)+' MB';
-}
-
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'show' + (type?' '+type:'');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.className='', 2800);
+async function dlAll(){
+  if(!results.length)return;
+  const zip=new JSZip();const folder=zip.folder('creatives');
+  const name=(document.getElementById('carModel').value||'creative').replace(/\s+/g,'-');
+  results.forEach(r=>folder.file(`${name}_${r.w}x${r.h}.png`,r.dataUrl.split(',')[1],{base64:true}));
+  if(copyData)folder.file('copy.txt',`Headline: ${copyData.headline}\nSubheadline: ${copyData.subheadline}\nBody: ${copyData.body}\nCTA: ${copyData.cta}\n\nKV Analysis:\n${kvAnalysis}`);
+  const blob=await zip.generateAsync({type:'blob'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`${name}_all-creatives.zip`;a.click();
 }
 </script>
 </body>
