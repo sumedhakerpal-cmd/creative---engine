@@ -15,60 +15,82 @@ CORS(app)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
-GAM_SIZES = [
-    {"name": "Billboard",        "w": 970, "h": 250, "gam": "970x250"},
-    {"name": "Filmstrip",        "w": 560, "h": 320, "gam": "560x320"},
-    {"name": "Mobile Banner",    "w": 320, "h": 100, "gam": "320x100"},
-    {"name": "Leaderboard",      "w": 970, "h": 90,  "gam": "970x90"},
-    {"name": "Medium Rectangle", "w": 300, "h": 250, "gam": "300x250"},
-    {"name": "Half Page",        "w": 360, "h": 600, "gam": "360x600"},
-    {"name": "Wide Skyscraper",  "w": 300, "h": 600, "gam": "300x600"},
+ALL_SIZES = [
+    {"name": "Billboard",        "w": 970,  "h": 250,  "gam": "970x250",   "type": "gam"},
+    {"name": "Filmstrip",        "w": 560,  "h": 320,  "gam": "560x320",   "type": "gam"},
+    {"name": "Mobile Banner",    "w": 320,  "h": 100,  "gam": "320x100",   "type": "gam"},
+    {"name": "Leaderboard",      "w": 970,  "h": 90,   "gam": "970x90",    "type": "gam"},
+    {"name": "Medium Rectangle", "w": 300,  "h": 250,  "gam": "300x250",   "type": "gam"},
+    {"name": "Half Page",        "w": 360,  "h": 600,  "gam": "360x600",   "type": "gam"},
+    {"name": "Wide Skyscraper",  "w": 300,  "h": 600,  "gam": "300x600",   "type": "gam"},
+    {"name": "Meta Square",      "w": 1080, "h": 1080, "gam": "1080x1080", "type": "meta"},
+    {"name": "Meta Story",       "w": 1080, "h": 1920, "gam": "1080x1920", "type": "meta"},
+    {"name": "Meta Landscape",   "w": 1200, "h": 628,  "gam": "1200x628",  "type": "meta"},
 ]
 
-ALL_SIZES = GAM_SIZES + [
-    {"name": "Meta Square",    "w": 1080, "h": 1080, "gam": "1080x1080"},
-    {"name": "Meta Story",     "w": 1080, "h": 1920, "gam": "1080x1920"},
-    {"name": "Meta Landscape", "w": 1200, "h": 628,  "gam": "1200x628"},
-]
-
-def fit_to_width(img, target_w, target_h, output_format):
+def smart_crop_resize(img, target_w, target_h, output_format):
+    """
+    High quality resize using Pillow LANCZOS.
+    Strategy: scale so the image FILLS the canvas (cover), 
+    then crop from centre. No white space, no distortion.
+    For very wide targets (billboard/leaderboard), 
+    shift crop upward slightly to favour the car over sky.
+    """
     orig_w, orig_h = img.size
-    scale = target_w / orig_w
-    new_w = target_w
-    new_h = round(orig_h * scale)
+    target_ratio = target_w / target_h
+    orig_ratio = orig_w / orig_h
+
+    # Scale to fill (cover), then crop
+    if orig_ratio > target_ratio:
+        # image is wider than target — scale by height, crop sides
+        scale = target_h / orig_h
+        new_w = round(orig_w * scale)
+        new_h = target_h
+    else:
+        # image is taller than target — scale by width, crop top/bottom
+        scale = target_w / orig_w
+        new_w = target_w
+        new_h = round(orig_h * scale)
+
     resized = img.resize((new_w, new_h), Image.LANCZOS)
-    is_jpg = output_format == "jpg"
-    mode = "RGB" if is_jpg else "RGBA"
-    bg_color = (255, 255, 255) if is_jpg else (255, 255, 255, 255)
-    canvas = Image.new(mode, (target_w, target_h), bg_color)
-    if mode == "RGBA":
-        if resized.mode != "RGBA":
-            resized = resized.convert("RGBA")
-        canvas.paste(resized, (0, 0), resized)
-    else:
-        if resized.mode in ("RGBA", "P"):
-            resized = resized.convert("RGB")
-        canvas.paste(resized, (0, 0))
+
+    # Crop from centre, but shift up by 10% for landscape formats
+    # so we favour the car/subject over sky
+    cx = (new_w - target_w) // 2
+    cy = (new_h - target_h) // 2
+
+    # For wide landscape formats, shift crop up (favour lower half of image)
+    if target_w > target_h * 2:  # very wide (billboard, leaderboard)
+        cy = max(0, cy + round((new_h - target_h) * 0.15))
+    elif target_w > target_h:    # moderately wide
+        cy = max(0, cy + round((new_h - target_h) * 0.05))
+
+    cropped = resized.crop((cx, cy, cx + target_w, cy + target_h))
+
     buf = io.BytesIO()
-    if is_jpg:
-        canvas.save(buf, format="JPEG", quality=92, optimize=True)
+    if output_format == "jpg":
+        if cropped.mode in ("RGBA", "P"):
+            cropped = cropped.convert("RGB")
+        cropped.save(buf, format="JPEG", quality=95, optimize=True, subsampling=0)
     else:
-        canvas.save(buf, format="PNG", optimize=True)
+        cropped.save(buf, format="PNG", optimize=True)
     buf.seek(0)
     return buf
 
-def fit_animated_gif(img_bytes, target_w, target_h):
+def resize_animated_gif(img_bytes, target_w, target_h):
     img = Image.open(io.BytesIO(img_bytes))
-    frames = []
-    durations = []
+    frames, durations = [], []
     try:
         while True:
             frame = img.copy().convert("RGBA")
             orig_w, orig_h = frame.size
-            scale = target_w / orig_w
-            resized = frame.resize((target_w, round(orig_h * scale)), Image.LANCZOS)
-            canvas = Image.new("RGBA", (target_w, target_h), (0, 0, 0, 0))
-            canvas.paste(resized, (0, 0), resized)
+            scale = max(target_w / orig_w, target_h / orig_h)
+            new_w, new_h = round(orig_w * scale), round(orig_h * scale)
+            resized = frame.resize((new_w, new_h), Image.LANCZOS)
+            cx = (new_w - target_w) // 2
+            cy = (new_h - target_h) // 2
+            canvas = Image.new("RGBA", (target_w, target_h), (0,0,0,0))
+            canvas.paste(resized.crop((cx, cy, cx+target_w, cy+target_h)), (0,0))
             frames.append(canvas)
             durations.append(img.info.get("duration", 100))
             img.seek(img.tell() + 1)
@@ -78,7 +100,7 @@ def fit_animated_gif(img_bytes, target_w, target_h):
         return None
     buf = io.BytesIO()
     frames[0].save(buf, format="GIF", save_all=True, append_images=frames[1:],
-                   loop=img.info.get("loop", 0), duration=durations, optimize=False, disposal=2)
+                   loop=img.info.get("loop",0), duration=durations, optimize=False, disposal=2)
     buf.seek(0)
     return buf
 
@@ -87,9 +109,61 @@ def index():
     with open(os.path.join(app.template_folder, "index.html"), "r") as f:
         return f.read()
 
+@app.route("/api/process", methods=["POST"])
+def process():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    file = request.files["file"]
+    output_format = request.form.get("format", "png").lower()
+    sizes_param = request.form.get("sizes", "")
+    single_size = request.form.get("single_size", "")
+
+    if sizes_param:
+        selected = set(sizes_param.split(","))
+        active_sizes = [s for s in ALL_SIZES if s["gam"] in selected]
+    else:
+        active_sizes = ALL_SIZES
+
+    try:
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes))
+        is_gif = file.filename.lower().endswith(".gif") or img.format == "GIF"
+        is_animated = is_gif and hasattr(img, "n_frames") and img.n_frames > 1
+        base_name = os.path.splitext(file.filename)[0]
+    except Exception as e:
+        return jsonify({"error": f"Could not open image: {str(e)}"}), 400
+
+    if single_size and len(active_sizes) == 1:
+        s = active_sizes[0]
+        if is_animated:
+            buf = resize_animated_gif(img_bytes, s["w"], s["h"])
+            ext, mime = "gif", "image/gif"
+        else:
+            img_copy = Image.open(io.BytesIO(img_bytes))
+            buf = smart_crop_resize(img_copy, s["w"], s["h"], output_format)
+            ext = output_format
+            mime = "image/jpeg" if ext == "jpg" else "image/png"
+        return send_file(buf, mimetype=mime, as_attachment=True,
+                        download_name=f"{base_name}_{s['w']}x{s['h']}.{ext}")
+
+    zip_buf = io.BytesIO()
+    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for size in active_sizes:
+            w, h = size["w"], size["h"]
+            img_copy = Image.open(io.BytesIO(img_bytes))
+            if is_animated:
+                resized_buf = resize_animated_gif(img_bytes, w, h)
+                ext = "gif"
+            else:
+                resized_buf = smart_crop_resize(img_copy, w, h, output_format)
+                ext = output_format
+            zf.writestr(f"{base_name}_{w}x{h}.{ext}", resized_buf.read())
+    zip_buf.seek(0)
+    return send_file(zip_buf, mimetype="application/zip", as_attachment=True,
+                    download_name=f"{base_name}_all-sizes.zip")
+
 @app.route("/api/analyse-kv", methods=["POST"])
 def analyse_kv():
-    """Analyse KV image using Claude. Accepts multipart: image_b64, mime, car_model"""
     if not ANTHROPIC_API_KEY:
         return jsonify({"error": "ANTHROPIC_API_KEY not set"}), 500
     data = request.get_json()
@@ -100,13 +174,10 @@ def analyse_kv():
         msg = client.messages.create(
             model="claude-opus-4-5",
             max_tokens=350,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64", "media_type": data.get("mime", "image/jpeg"), "data": data["image_b64"]}},
-                    {"type": "text", "text": f"Analyse this automotive KV creative for {data.get('car_model','the car')}. Describe in 2-3 sentences: dominant colours (hex if obvious), background style, car position and angle, logo/branding placement, and visual mood. Be specific about layout zones. This guides AI image generation to replicate the style."}
-                ]
-            }]
+            messages=[{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": data.get("mime","image/jpeg"), "data": data["image_b64"]}},
+                {"type": "text", "text": f"Analyse this automotive KV for {data.get('car_model','the car')}. Describe: dominant colours (hex if obvious), background style, car position/angle, logo placement, visual mood. Be specific about layout zones. 2-3 sentences max."}
+            ]}]
         )
         return jsonify({"analysis": msg.content[0].text.strip()})
     except Exception as e:
@@ -114,7 +185,6 @@ def analyse_kv():
 
 @app.route("/api/write-copy", methods=["POST"])
 def write_copy():
-    """Write ad copy using Claude. Accepts JSON: brief, analysis"""
     if not ANTHROPIC_API_KEY:
         return jsonify({"error": "ANTHROPIC_API_KEY not set"}), 500
     data = request.get_json()
@@ -124,22 +194,20 @@ def write_copy():
     analysis = data.get("analysis", "")
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        prompt = f"""Expert automotive copywriter for Cars24 New Cars. Return ONLY valid JSON, no markdown:
-{{"headline":"max 7 words","subheadline":"max 12 words","body":"max 18 words","cta":"{brief.get('cta','Learn More')}"}}
-Car: {brief.get('model','the car')} | Audience: {brief.get('aud','urban buyers')} | Offer: {brief.get('offer','competitive pricing')} | Theme: {brief.get('theme','modern')} | KV style: {analysis} | Notes: {brief.get('style','none')}"""
         msg = client.messages.create(
             model="claude-opus-4-5",
             max_tokens=400,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": f"""Expert automotive copywriter for Cars24 New Cars. Return ONLY valid JSON, no markdown:
+{{"headline":"max 7 words","subheadline":"max 12 words","body":"max 18 words","cta":"{brief.get('cta','Learn More')}"}}
+Car: {brief.get('model','the car')} | Audience: {brief.get('aud','urban buyers')} | Offer: {brief.get('offer','competitive pricing')} | Theme: {brief.get('theme','modern')} | KV style: {analysis} | Notes: {brief.get('style','none')}"""}]
         )
-        raw = msg.content[0].text.strip().replace("```json", "").replace("```", "").strip()
+        raw = msg.content[0].text.strip().replace("```json","").replace("```","").strip()
         return jsonify(json.loads(raw))
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/generate-image", methods=["POST"])
 def generate_image():
-    """Generate image using OpenAI. Accepts JSON: prompt"""
     if not OPENAI_API_KEY:
         return jsonify({"error": "OPENAI_API_KEY not set"}), 500
     data = request.get_json()
@@ -158,53 +226,6 @@ def generate_image():
         return jsonify({"b64_json": result["data"][0]["b64_json"]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@app.route("/api/process", methods=["POST"])
-def process():
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-    file = request.files["file"]
-    output_format = request.form.get("format", "png").lower()
-    sizes_param = request.form.get("sizes", "")
-    single_size = request.form.get("single_size", "")
-    if sizes_param:
-        selected = set(sizes_param.split(","))
-        active_sizes = [s for s in ALL_SIZES if s["gam"] in selected]
-    else:
-        active_sizes = GAM_SIZES
-    try:
-        img_bytes = file.read()
-        img = Image.open(io.BytesIO(img_bytes))
-        is_gif = file.filename.lower().endswith(".gif") or img.format == "GIF"
-        is_animated = is_gif and hasattr(img, "n_frames") and img.n_frames > 1
-        base_name = os.path.splitext(file.filename)[0]
-    except Exception as e:
-        return jsonify({"error": f"Could not open image: {str(e)}"}), 400
-    if single_size and len(active_sizes) == 1:
-        s = active_sizes[0]
-        if is_animated:
-            buf = fit_animated_gif(img_bytes, s["w"], s["h"])
-            ext, mime = "gif", "image/gif"
-        else:
-            img_copy = Image.open(io.BytesIO(img_bytes))
-            buf = fit_to_width(img_copy, s["w"], s["h"], output_format)
-            ext = output_format
-            mime = "image/jpeg" if ext == "jpg" else "image/png"
-        return send_file(buf, mimetype=mime, as_attachment=True, download_name=f"{base_name}_{s['w']}x{s['h']}.{ext}")
-    zip_buf = io.BytesIO()
-    with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
-        for size in active_sizes:
-            w, h = size["w"], size["h"]
-            img_copy = Image.open(io.BytesIO(img_bytes))
-            if is_animated:
-                resized_buf = fit_animated_gif(img_bytes, w, h)
-                ext = "gif"
-            else:
-                resized_buf = fit_to_width(img_copy, w, h, output_format)
-                ext = output_format
-            zf.writestr(f"{base_name}_{w}x{h}.{ext}", resized_buf.read())
-    zip_buf.seek(0)
-    return send_file(zip_buf, mimetype="application/zip", as_attachment=True, download_name=f"{base_name}_all-sizes.zip")
 
 @app.route("/api/sizes")
 def get_sizes():

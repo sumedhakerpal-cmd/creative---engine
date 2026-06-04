@@ -12,22 +12,39 @@
   --border:#2a2a2a;--border2:#383838;
   --text:#f0f0f0;--text2:#888;--text3:#555;
   --accent:#d4ff3e;--accent-dim:rgba(212,255,62,0.09);--accent-text:#0f0f0f;
-  --green:#3effa0;--red:#ff4545;
+  --green:#3effa0;--red:#ff4545;--blue:#60a5fa;
   --r:10px;--rsm:7px;
 }
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column}
 header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:54px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
 .logo{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600}
 .dot{width:8px;height:8px;background:var(--accent);border-radius:50%}
-.badge{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--green);color:var(--green)}
-.steps{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
-.step{flex:1;padding:10px 0;text-align:center;font-size:11px;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;letter-spacing:0.3px}
+.mode-badge{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2)}
+main{flex:1;padding:28px;max-width:960px;margin:0 auto;width:100%}
+
+/* MODE SELECTOR */
+.mode-select{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px}
+.mode-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:24px;cursor:pointer;transition:all 0.2s;position:relative}
+.mode-card:hover{border-color:var(--border2)}
+.mode-card.active-mode{border-color:var(--accent);background:var(--accent-dim)}
+.mode-card.active-mode.gen{border-color:var(--blue);background:rgba(96,165,250,0.06)}
+.mode-icon{font-size:28px;margin-bottom:12px;display:block}
+.mode-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.mode-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.mode-tag{position:absolute;top:14px;right:14px;font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700}
+.tag-free{background:rgba(62,255,160,0.12);color:var(--green);border:1px solid rgba(62,255,160,0.2)}
+.tag-credits{background:rgba(96,165,250,0.12);color:var(--blue);border:1px solid rgba(96,165,250,0.2)}
+
+/* PANELS */
+.panel{display:none}.panel.active{display:block}
+.steps{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden}
+.step{flex:1;padding:10px 0;text-align:center;font-size:11px;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer}
 .step.active{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
 .step.done{color:var(--text2)}
-main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
-.panel{display:none}.panel.active{display:block}
 .lbl{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:18px}
+
+/* UPLOAD */
 .uz{border:1.5px dashed var(--border2);border-radius:var(--r);padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface2)}
 .uz:hover,.uz.drag{border-color:var(--accent);background:var(--accent-dim)}
 .uz.done{border-style:solid;border-color:var(--green)}
@@ -46,14 +63,8 @@ main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
 .ft-ai{background:var(--accent-dim);color:var(--accent)}
 .ft-other{background:rgba(255,255,255,0.05);color:var(--text3)}
 .warn{background:rgba(255,69,69,0.08);border:1px solid rgba(255,69,69,0.25);border-radius:var(--rsm);padding:10px 12px;font-size:12px;color:var(--red);margin-top:10px;display:none}
-.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.fg{display:flex;flex-direction:column;gap:5px}
-.fg.full{grid-column:1/-1}
-.fg label{font-size:11px;color:var(--text2);font-weight:600}
-.fg input,.fg textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);color:var(--text);font-size:13px;padding:9px 12px;width:100%}
-.fg input:focus,.fg textarea:focus{outline:none;border-color:var(--accent)}
-.fg textarea{height:72px;resize:none;line-height:1.5}
-.helper{font-size:10px;color:var(--text3);margin-top:3px;font-style:italic}
+
+/* SIZES */
 .sz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:8px}
 .sz{padding:9px 11px;border-radius:var(--rsm);border:1px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s;user-select:none}
 .sz:hover{border-color:var(--border2)}
@@ -62,7 +73,14 @@ main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
 .sz .sd{font-size:9px;color:var(--text2);font-family:monospace;margin-top:2px}
 .sz .st{font-size:8px;padding:1px 5px;border-radius:3px;margin-top:4px;display:inline-block;font-weight:700}
 .st-gam{background:var(--accent-dim);color:var(--accent)}
-.st-meta{background:rgba(59,130,246,0.12);color:#60a5fa}
+.st-meta{background:rgba(96,165,250,0.12);color:var(--blue)}
+
+/* FORMAT */
+.fmt-row{display:flex;gap:8px;margin-top:8px}
+.fmt-btn{flex:1;padding:8px 0;font-size:11px;font-weight:600;border-radius:var(--rsm);cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all 0.15s;text-transform:uppercase;letter-spacing:0.5px}
+.fmt-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+
+/* BUTTONS */
 .btn-row{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
 .btn{display:flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--rsm);font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all 0.15s}
 .btn:hover{background:var(--surface2)}
@@ -71,6 +89,25 @@ main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
 .btn.primary:hover{background:#c8f030}
 .btn.primary:disabled{background:var(--accent);opacity:0.35}
 .btn.sm{font-size:11px;padding:6px 13px}
+.btn.blue{background:var(--blue);border-color:var(--blue);color:#0f0f0f}
+.btn.blue:hover{background:#93c5fd}
+
+/* RESIZE RESULTS */
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.rc-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.rc-title{font-size:12px;font-weight:700}
+.rc-dims{font-size:10px;color:var(--text2);font-family:monospace}
+.rc-img{background:repeating-conic-gradient(#1e1e1e 0% 25%,#1a1a1a 0% 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;min-height:80px;position:relative;cursor:zoom-in}
+.rc-img img{display:block;max-width:100%;max-height:200px;object-fit:contain}
+.rc-ft{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border)}
+.rc-gam{font-size:9px;color:var(--text3);font-family:monospace}
+.dl-btn{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2);background:none;border:1px solid var(--border2);border-radius:5px;padding:4px 9px;cursor:pointer;transition:all 0.15s}
+.dl-btn:hover{border-color:var(--accent);color:var(--text)}
+.scale-tag{position:absolute;bottom:5px;right:6px;font-size:9px;color:rgba(255,255,255,0.4);background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;font-family:monospace}
+.fit-info{font-size:10px;color:var(--text3)}
+
+/* GENERATE STEPS */
 .gen-wrap{text-align:center;padding:40px 20px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border)}
 .gen-steps{display:flex;flex-direction:column;gap:8px;max-width:400px;margin:22px auto 0}
 .gs{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--rsm);background:var(--surface2);font-size:12px;color:var(--text3);transition:all 0.3s}
@@ -79,6 +116,8 @@ main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
 .gs .ico{width:20px;text-align:center;font-size:15px;flex-shrink:0}
 .spinner{width:16px;height:16px;border:2px solid rgba(212,255,62,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.75s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* COPY BOX */
 .copy-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:14px 16px;margin-bottom:16px}
 .cb-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:8px}
 .cb-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-bottom:1px solid var(--border)}
@@ -87,131 +126,246 @@ main{flex:1;padding:28px;max-width:900px;margin:0 auto;width:100%}
 .cb-v{font-size:12px;font-weight:600;text-align:right;max-width:55%;color:var(--text)}
 .kv-used{font-size:11px;background:rgba(62,255,160,0.06);border:1px solid rgba(62,255,160,0.2);border-radius:var(--rsm);padding:9px 12px;color:var(--text2);margin-bottom:16px;line-height:1.5}
 .kv-used strong{color:var(--green)}
-.res-header{display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px}
-.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.rc-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
-.rc-title{font-size:12px;font-weight:700}
-.rc-dims{font-size:10px;color:var(--text2);font-family:monospace}
-.rc-img{background:repeating-conic-gradient(#1e1e1e 0% 25%,#1a1a1a 0% 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;min-height:100px}
-.rc-img img{display:block;max-width:100%;max-height:220px;object-fit:contain}
-.rc-ft{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border)}
-.rc-gam{font-size:9px;color:var(--text3);font-family:monospace}
-.dl-btn{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text2);background:none;border:1px solid var(--border2);border-radius:5px;padding:4px 9px;cursor:pointer;transition:all 0.15s}
-.dl-btn:hover{border-color:var(--accent);color:var(--text)}
+
+/* FORM */
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;color:var(--text2);font-weight:600}
+.fg input,.fg textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--rsm);color:var(--text);font-size:13px;padding:9px 12px;width:100%}
+.fg input:focus,.fg textarea:focus{outline:none;border-color:var(--accent)}
+.fg textarea{height:72px;resize:none;line-height:1.5}
+
 .err{background:rgba(255,69,69,0.08);border:1px solid rgba(255,69,69,0.25);border-radius:var(--rsm);padding:11px 14px;font-size:12px;color:var(--red);margin-top:12px;display:none}
+
+/* ZOOM */
+#zoomOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#zoomOverlay.show{display:flex}
+#zoomBox{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:20px;max-width:95vw;max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+#zoomHeader{display:flex;align-items:center;justify-content:space-between}
+#zoomClose{background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1}
+#zoomImg{display:block;max-width:100%;border:1px solid var(--border)}
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo"><div class="dot"></div>Creative Studio · Cars24</div>
-  <span class="badge">✓ All APIs server-side</span>
+  <span class="mode-badge" id="modeBadge">Select a mode</span>
 </header>
-<div class="steps">
-  <div class="step active" id="s1" onclick="goStep(1)">1 · Upload KV</div>
-  <div class="step" id="s2" onclick="goStep(2)">2 · Brief</div>
-  <div class="step" id="s3" onclick="goStep(3)">3 · Sizes</div>
-  <div class="step" id="s4">4 · Generate</div>
-</div>
+
 <main>
 
-<!-- STEP 1 -->
-<div class="panel active" id="p1">
-  <div class="lbl">Open File (Design Team ZIP or JPG/PNG)</div>
-  <div class="uz" id="uzZone"
-    onclick="document.getElementById('fileInp').click()"
-    ondragover="event.preventDefault();this.classList.add('drag')"
-    ondragleave="this.classList.remove('drag')"
-    ondrop="this.classList.remove('drag');handleDrop(event)">
-    <div class="icon">📦</div>
-    <p>Drop your design team ZIP here</p>
-    <div class="sub">Engine auto-extracts the KV image · Also accepts JPG/PNG directly</div>
+<!-- MODE SELECTOR -->
+<div class="mode-select" id="modeSelect">
+  <div class="mode-card" id="modeResize" onclick="selectMode('resize')">
+    <span class="mode-tag tag-free">No credits needed</span>
+    <span class="mode-icon">📐</span>
+    <div class="mode-title">Resize Open File</div>
+    <div class="mode-desc">Upload your design team's ZIP or JPG/PNG. Engine resizes to all 7 GAM sizes + 3 Meta sizes. Download instantly.</div>
   </div>
-  <input type="file" id="fileInp" accept=".zip,image/jpeg,image/png" style="display:none" onchange="handleFileInput(event)">
-  <div class="warn" id="noImgWarn"></div>
-  <div class="extracted" id="epWrap">
-    <div class="ep-top">
-      <img class="kv-thumb" id="kvThumb" src="" alt="KV">
+  <div class="mode-card" id="modeGenerate" onclick="selectMode('generate')">
+    <span class="mode-tag tag-credits">OpenAI credits needed</span>
+    <span class="mode-icon">✨</span>
+    <div class="mode-title">Generate from Brief</div>
+    <div class="mode-desc">Upload a KV as reference. Claude reads the style, writes copy, GPT-4o generates a new creative. All sizes exported.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- RESIZE PANEL -->
+<!-- ═══════════════════════════════════════ -->
+<div class="panel" id="resizePanel">
+  <div class="steps">
+    <div class="step active" id="rs1" onclick="rGoStep(1)">1 · Upload</div>
+    <div class="step" id="rs2" onclick="rGoStep(2)">2 · Sizes & Format</div>
+    <div class="step" id="rs3">3 · Download</div>
+  </div>
+
+  <!-- R STEP 1 -->
+  <div class="panel active" id="rp1">
+    <div class="lbl">Upload Open File</div>
+    <div class="uz" id="rUzZone"
+      onclick="document.getElementById('rFileInp').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="this.classList.remove('drag');rHandleDrop(event)">
+      <div class="icon">📦</div>
+      <p>Drop your design team ZIP or JPG/PNG here</p>
+      <div class="sub">ZIP auto-extracts the KV · Supports JPG, PNG, animated GIF</div>
+    </div>
+    <input type="file" id="rFileInp" accept=".zip,image/jpeg,image/png,image/gif" style="display:none" onchange="rHandleInput(event)">
+    <div class="warn" id="rWarn"></div>
+    <div class="extracted" id="rExtracted">
+      <div class="ep-top">
+        <img class="kv-thumb" id="rThumb" src="" alt="KV">
+        <div>
+          <div class="kv-name" id="rKvName"></div>
+          <div class="kv-meta" id="rKvMeta"></div>
+        </div>
+      </div>
+      <div class="file-list" id="rFileList"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="selectMode(null)">← Modes</button>
+      <button class="btn primary" id="rN1" disabled onclick="rGoStep(2)">Next: Choose Sizes →</button>
+    </div>
+  </div>
+
+  <!-- R STEP 2 -->
+  <div class="panel" id="rp2">
+    <div class="lbl">Ad Sizes</div>
+    <div class="sz-grid" id="rSzGrid"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn sm" onclick="rAllSz(true)">Select all</button>
+      <button class="btn sm" onclick="rAllSz(false)">Clear all</button>
+    </div>
+    <div class="lbl" style="margin-top:20px">Output Format</div>
+    <div class="fmt-row">
+      <button class="fmt-btn active" onclick="setFmt('png',this)">PNG</button>
+      <button class="fmt-btn" onclick="setFmt('jpg',this)">JPG</button>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:6px">Fit to width · Original ratio preserved · Animated GIFs stay animated</div>
+    <div class="btn-row">
+      <button class="btn" onclick="rGoStep(1)">← Back</button>
+      <button class="btn primary" onclick="rProcess()">⬇ Download All Sizes</button>
+    </div>
+  </div>
+
+  <!-- R STEP 3 -->
+  <div class="panel" id="rp3">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div>
-        <div class="kv-name" id="kvName"></div>
-        <div class="kv-meta" id="kvMeta"></div>
+        <div style="font-size:15px;font-weight:600" id="rResTitle"></div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px" id="rResSubtitle"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="rGoStep(1)">← New file</button>
+        <button class="btn primary sm" onclick="rDlAll()">⬇ Download all (ZIP)</button>
       </div>
     </div>
-    <div class="file-list" id="fileList"></div>
-  </div>
-  <div class="btn-row">
-    <button class="btn primary" id="n1" disabled onclick="goStep(2)">Next: Campaign Brief →</button>
+    <div class="res-grid" id="rResGrid"></div>
   </div>
 </div>
 
-<!-- STEP 2 -->
-<div class="panel" id="p2">
-  <div class="lbl">Campaign Brief</div>
-  <div class="card">
-    <div class="r2">
-      <div class="fg"><label>Car model *</label><input id="carModel" placeholder="e.g. Tata Tiago EV" oninput="chk2()"></div>
-      <div class="fg"><label>CTA *</label><input id="ctaText" placeholder="e.g. Book a Test Drive" oninput="chk2()"></div>
-      <div class="fg"><label>Target audience</label><input id="audience" placeholder="e.g. First-time EV buyers, 25–40, urban India"></div>
-      <div class="fg"><label>Offer / price</label><input id="offer" placeholder="e.g. Starting ₹8.49L · EMI ₹9,999/mo"></div>
-      <div class="fg full"><label>Campaign theme</label><textarea id="theme" placeholder="e.g. Make the switch to electric. Zero compromise on range, style, or price."></textarea></div>
-      <div class="fg full">
-        <label>Style notes <span style="font-weight:400;color:var(--text3)">(optional — Claude reads your KV automatically)</span></label>
-        <textarea id="styleNotes" placeholder="e.g. Keep Tata blue prominent. CTA button bottom-right."></textarea>
-        <div class="helper">Claude will analyse your KV image for colours, layout and mood before generating.</div>
+<!-- ═══════════════════════════════════════ -->
+<!-- GENERATE PANEL -->
+<!-- ═══════════════════════════════════════ -->
+<div class="panel" id="generatePanel">
+  <div class="steps">
+    <div class="step active" id="gs1" onclick="gGoStep(1)">1 · Upload KV</div>
+    <div class="step" id="gs2" onclick="gGoStep(2)">2 · Brief</div>
+    <div class="step" id="gs3" onclick="gGoStep(3)">3 · Sizes</div>
+    <div class="step" id="gs4">4 · Generate</div>
+  </div>
+
+  <!-- G STEP 1 -->
+  <div class="panel active" id="gp1">
+    <div class="lbl">Master Creative (KV Reference)</div>
+    <div class="uz" id="gUzZone"
+      onclick="document.getElementById('gFileInp').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="this.classList.remove('drag');gHandleDrop(event)">
+      <div class="icon">🎨</div>
+      <p>Drop your design team ZIP or JPG/PNG</p>
+      <div class="sub">Claude will analyse colours, layout and mood from this image</div>
+    </div>
+    <input type="file" id="gFileInp" accept=".zip,image/jpeg,image/png" style="display:none" onchange="gHandleInput(event)">
+    <div class="warn" id="gWarn"></div>
+    <div class="extracted" id="gExtracted">
+      <div class="ep-top">
+        <img class="kv-thumb" id="gThumb" src="" alt="KV">
+        <div>
+          <div class="kv-name" id="gKvName"></div>
+          <div class="kv-meta" id="gKvMeta"></div>
+        </div>
       </div>
     </div>
+    <div class="btn-row">
+      <button class="btn" onclick="selectMode(null)">← Modes</button>
+      <button class="btn primary" id="gN1" disabled onclick="gGoStep(2)">Next: Campaign Brief →</button>
+    </div>
   </div>
-  <div class="btn-row">
-    <button class="btn" onclick="goStep(1)">← Back</button>
-    <button class="btn primary" id="n2" disabled onclick="goStep(3)">Next: Select Sizes →</button>
-  </div>
-</div>
 
-<!-- STEP 3 -->
-<div class="panel" id="p3">
-  <div class="lbl">Output Sizes</div>
-  <div class="sz-grid" id="sizeGrid"></div>
-  <div style="display:flex;gap:8px;margin-top:10px">
-    <button class="btn sm" onclick="allSz(true)">Select all</button>
-    <button class="btn sm" onclick="allSz(false)">Clear all</button>
-  </div>
-  <div class="btn-row">
-    <button class="btn" onclick="goStep(2)">← Back</button>
-    <button class="btn primary" onclick="generate()">✦ Generate creatives</button>
-  </div>
-</div>
-
-<!-- STEP 4 -->
-<div class="panel" id="p4">
-  <div id="genWrap" style="display:none">
-    <div class="gen-wrap">
-      <div style="font-size:15px;font-weight:600">Generating your creatives</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:4px">30–90 seconds</div>
-      <div class="gen-steps">
-        <div class="gs" id="g1"><span class="ico">📦</span><span>KV extracted from ZIP</span></div>
-        <div class="gs" id="g2"><span class="ico">👁</span><span>Claude analysing KV style and colours...</span></div>
-        <div class="gs" id="g3"><span class="ico">✍️</span><span>Writing copy from brief...</span></div>
-        <div class="gs" id="g4"><span class="ico">✨</span><span>GPT-4o generating visual with KV reference...</span></div>
-        <div class="gs" id="g5"><span class="ico">📐</span><span>Resizing to all selected formats...</span></div>
-        <div class="gs" id="g6"><span class="ico">📦</span><span>Packaging output...</span></div>
+  <!-- G STEP 2 -->
+  <div class="panel" id="gp2">
+    <div class="lbl">Campaign Brief</div>
+    <div class="card">
+      <div class="r2">
+        <div class="fg"><label>Car model *</label><input id="gModel" placeholder="e.g. Tata Tiago EV" oninput="gChk2()"></div>
+        <div class="fg"><label>CTA *</label><input id="gCta" placeholder="e.g. Book a Test Drive" oninput="gChk2()"></div>
+        <div class="fg"><label>Target audience</label><input id="gAud" placeholder="e.g. First-time EV buyers, 25–40"></div>
+        <div class="fg"><label>Offer / price</label><input id="gOffer" placeholder="e.g. Starting ₹8.49L"></div>
+        <div class="fg full"><label>Campaign theme</label><textarea id="gTheme" placeholder="e.g. Make the switch to electric."></textarea></div>
+        <div class="fg full"><label>Style notes <span style="font-weight:400;color:var(--text3)">(optional)</span></label><textarea id="gStyle" placeholder="e.g. Keep Tata blue. CTA button bottom-right."></textarea></div>
       </div>
-      <div class="err" id="genErr"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="gGoStep(1)">← Back</button>
+      <button class="btn primary" id="gN2" disabled onclick="gGoStep(3)">Next: Select Sizes →</button>
     </div>
   </div>
-  <div id="resWrap" style="display:none">
-    <div class="copy-box" id="copyBox"></div>
-    <div class="kv-used" id="kvUsed"></div>
-    <div class="res-header">
-      <button class="btn sm" onclick="goStep(1)">← New creative</button>
-      <button class="btn primary sm" onclick="dlAll()">⬇ Download all (ZIP)</button>
+
+  <!-- G STEP 3 -->
+  <div class="panel" id="gp3">
+    <div class="lbl">Output Sizes</div>
+    <div class="sz-grid" id="gSzGrid"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn sm" onclick="gAllSz(true)">Select all</button>
+      <button class="btn sm" onclick="gAllSz(false)">Clear all</button>
     </div>
-    <div class="res-grid" id="resGrid"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="gGoStep(2)">← Back</button>
+      <button class="btn blue" onclick="gGenerate()">✦ Generate creatives</button>
+    </div>
+  </div>
+
+  <!-- G STEP 4 -->
+  <div class="panel" id="gp4">
+    <div id="gGenWrap" style="display:none">
+      <div class="gen-wrap">
+        <div style="font-size:15px;font-weight:600">Generating your creatives</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">30–90 seconds</div>
+        <div class="gen-steps">
+          <div class="gs" id="gg1"><span class="ico">📦</span><span>KV extracted</span></div>
+          <div class="gs" id="gg2"><span class="ico">👁</span><span>Claude analysing KV style...</span></div>
+          <div class="gs" id="gg3"><span class="ico">✍️</span><span>Writing copy from brief...</span></div>
+          <div class="gs" id="gg4"><span class="ico">✨</span><span>GPT-4o generating visual...</span></div>
+          <div class="gs" id="gg5"><span class="ico">📐</span><span>Resizing to all formats...</span></div>
+          <div class="gs" id="gg6"><span class="ico">📦</span><span>Packaging output...</span></div>
+        </div>
+        <div class="err" id="gErr"></div>
+      </div>
+    </div>
+    <div id="gResWrap" style="display:none">
+      <div class="copy-box" id="gCopyBox"></div>
+      <div class="kv-used" id="gKvUsed"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+        <button class="btn sm" onclick="selectMode(null)">← Modes</button>
+        <button class="btn primary sm" onclick="gDlAll()">⬇ Download all (ZIP)</button>
+      </div>
+      <div class="res-grid" id="gResGrid"></div>
+    </div>
   </div>
 </div>
 
 </main>
+
+<!-- ZOOM -->
+<div id="zoomOverlay" onclick="closeZoom(event)">
+  <div id="zoomBox">
+    <div id="zoomHeader">
+      <span id="zoomTitle" style="font-size:13px;font-weight:600"></span>
+      <button id="zoomClose" onclick="closeZoom()">×</button>
+    </div>
+    <img id="zoomImg" src="" alt="">
+    <div id="zoomMeta" style="font-size:10px;color:var(--text2);font-family:monospace"></div>
+  </div>
+</div>
+
 <script>
-const SIZES=[
+const ALL_SIZES=[
   {n:'Billboard',      w:970, h:250,  g:'970x250',  t:'gam'},
   {n:'Filmstrip',      w:560, h:320,  g:'560x320',  t:'gam'},
   {n:'Mobile Banner',  w:320, h:100,  g:'320x100',  t:'gam'},
@@ -223,119 +377,287 @@ const SIZES=[
   {n:'Meta Story',     w:1080,h:1920, g:'1080x1920',t:'meta'},
   {n:'Meta Landscape', w:1200,h:628,  g:'1200x628', t:'meta'},
 ];
-const BASE = '';  // same origin — served from Railway
-let sel=new Set(SIZES.map(s=>s.g));
-let kvB64=null,kvMime=null,kvFileName='';
-let results=[],copyData=null,kvAnalysis='';
 
-(function(){
-  const g=document.getElementById('sizeGrid');
-  SIZES.forEach(s=>{
-    const d=document.createElement('div');
-    d.className='sz on';d.dataset.g=s.g;
-    d.innerHTML=`<div class="sn">${s.n}</div><div class="sd">${s.w}×${s.h}</div><span class="st st-${s.t}">${s.t.toUpperCase()}</span>`;
-    d.onclick=()=>{sel.has(s.g)?sel.delete(s.g):sel.add(s.g);d.classList.toggle('on',sel.has(s.g));};
-    g.appendChild(d);
-  });
-})();
-
-function allSz(v){sel=v?new Set(SIZES.map(s=>s.g)):new Set();document.querySelectorAll('.sz').forEach(c=>c.classList.toggle('on',v));}
-
-function goStep(n){
-  for(let i=1;i<=4;i++){
-    document.getElementById('p'+i).classList.toggle('active',i===n);
-    const s=document.getElementById('s'+i);
-    if(s){s.classList.toggle('active',i===n);s.classList.toggle('done',i<n);}
-  }
+// ── MODE ──────────────────────────────────
+function selectMode(mode){
+  document.getElementById('modeSelect').style.display = mode ? 'none' : 'grid';
+  document.getElementById('resizePanel').classList.toggle('active', mode==='resize');
+  document.getElementById('generatePanel').classList.toggle('active', mode==='generate');
+  const badge = document.getElementById('modeBadge');
+  if(mode==='resize') badge.textContent='Mode: Resize';
+  else if(mode==='generate') badge.textContent='Mode: Generate';
+  else badge.textContent='Select a mode';
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active-mode'));
+  if(mode) document.getElementById('mode'+mode.charAt(0).toUpperCase()+mode.slice(1)).classList.add('active-mode');
 }
 
-function chk1(){document.getElementById('n1').disabled=!kvB64;}
-function chk2(){document.getElementById('n2').disabled=!(document.getElementById('carModel').value.trim()&&document.getElementById('ctaText').value.trim());}
+// ── SHARED UTILS ──────────────────────────
+function readDataUrl(file){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.onerror=j;fr.readAsDataURL(file);});}
+function loadImg(src){return new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src;});}
+function fmtSize(b){return b<1048576?(b/1024).toFixed(0)+' KB':(b/1048576).toFixed(1)+' MB';}
 
-function handleDrop(ev){ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)processFile(f);}
-function handleFileInput(ev){const f=ev.target.files[0];if(f)processFile(f);ev.target.value='';}
-
-async function processFile(file){
-  document.getElementById('noImgWarn').style.display='none';
-  if(file.type.startsWith('image/')){
-    await loadImgFile(file,[{name:file.name,type:'img'}]);
-  } else if(file.name.toLowerCase().endsWith('.zip')){
-    await extractZip(file);
-  } else {
-    showWarn('Please upload a ZIP or a JPG/PNG image.');
-  }
+async function extractFromZip(file){
+  const ab=await file.arrayBuffer();
+  const zip=await JSZip.loadAsync(ab);
+  const allNames=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
+  const imgExts=['.jpg','.jpeg','.png','.gif'];
+  const imgFiles=allNames.filter(n=>imgExts.some(e=>n.toLowerCase().endsWith(e)));
+  if(!imgFiles.length) return null;
+  const preferred=imgFiles.find(n=>/(link|export|output|render)/i.test(n))||imgFiles[0];
+  const blob=await zip.files[preferred].async('blob');
+  const ext=preferred.toLowerCase().split('.').pop();
+  const mimeMap={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',gif:'image/gif'};
+  const mime=mimeMap[ext]||'image/jpeg';
+  const imgFile=new File([blob],preferred.split('/').pop(),{type:mime});
+  const entries=allNames.map(n=>({
+    name:n.split('/').pop(),
+    type:imgExts.some(e=>n.toLowerCase().endsWith(e))?'img':n.toLowerCase().endsWith('.ai')?'ai':'other'
+  }));
+  return {imgFile, entries, allNames};
 }
 
-async function loadImgFile(file,entries){
-  const url=await readDataUrl(file);
-  kvB64=url.split(',')[1];kvMime=file.type;kvFileName=file.name;
-  const img=await loadImg(url);
-  showExtracted(url,file.name,`${(file.size/1024).toFixed(0)} KB · ${img.naturalWidth}×${img.naturalHeight}px`,entries);
-  chk1();
-}
-
-async function extractZip(file){
-  const zone=document.getElementById('uzZone');
-  zone.querySelector('p').textContent='Reading ZIP...';
-  try{
-    const ab=await file.arrayBuffer();
-    const zip=await JSZip.loadAsync(ab);
-    const allNames=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
-    const imgExts=['.jpg','.jpeg','.png'];
-    const imgFiles=allNames.filter(n=>imgExts.some(e=>n.toLowerCase().endsWith(e)));
-    if(!imgFiles.length){
-      zone.querySelector('p').textContent='Drop your design team ZIP here';
-      showWarn('No JPG or PNG found in the ZIP.');
-      return;
-    }
-    const preferred=imgFiles.find(n=>/(link|export|output|render)/i.test(n))||imgFiles[0];
-    const blob=await zip.files[preferred].async('blob');
-    const mime=preferred.toLowerCase().endsWith('.png')?'image/png':'image/jpeg';
-    const imgFile=new File([blob],preferred.split('/').pop(),{type:mime});
-    const entries=allNames.map(n=>({
-      name:n.split('/').pop(),
-      type:['.jpg','.jpeg','.png'].some(e=>n.toLowerCase().endsWith(e))?'img':n.toLowerCase().endsWith('.ai')?'ai':'other'
-    }));
-    zone.classList.add('done');
-    zone.querySelector('p').textContent=file.name;
-    zone.querySelector('.sub').textContent=`${allNames.length} files · KV auto-extracted · click to change`;
-    await loadImgFile(imgFile,entries);
-  }catch(e){
-    zone.querySelector('p').textContent='Drop your design team ZIP here';
-    showWarn('Could not read ZIP: '+e.message);
-  }
-}
-
-function showExtracted(url,name,meta,files){
-  const w=document.getElementById('epWrap');w.style.display='block';
-  document.getElementById('kvThumb').src=url;
-  document.getElementById('kvName').textContent='✓ KV found: '+name;
-  document.getElementById('kvMeta').textContent=meta;
-  document.getElementById('fileList').innerHTML=files.slice(0,10).map(f=>`
+function showExtracted(thumbId,nameId,metaId,listId,url,name,meta,entries){
+  document.getElementById(thumbId).src=url;
+  document.getElementById(nameId).textContent='✓ KV found: '+name;
+  document.getElementById(metaId).textContent=meta;
+  if(listId) document.getElementById(listId).innerHTML=(entries||[]).slice(0,8).map(f=>`
     <div class="file-row"><span>${f.name}</span>
     <span class="ft ft-${f.type}">${f.type==='img'?'KV image':f.type==='ai'?'Illustrator':'file'}</span></div>`).join('');
 }
 
-function showWarn(msg){const e=document.getElementById('noImgWarn');e.textContent=msg;e.style.display='block';}
-function readDataUrl(file){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.onerror=j;fr.readAsDataURL(file);});}
-function loadImg(src){return new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src;});}
+// ── RESIZE MODE ───────────────────────────
+let rSel=new Set(ALL_SIZES.map(s=>s.g));
+let rFile=null, rDataUrl=null, rFmt='png';
 
-async function generate(){
-  goStep(4);
-  document.getElementById('genWrap').style.display='block';
-  document.getElementById('resWrap').style.display='none';
-  document.getElementById('genErr').style.display='none';
+(function buildRSizes(){
+  const g=document.getElementById('rSzGrid');
+  ALL_SIZES.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='sz on';d.dataset.g=s.g;
+    d.innerHTML=`<div class="sn">${s.n}</div><div class="sd">${s.w}×${s.h}</div><span class="st st-${s.t}">${s.t.toUpperCase()}</span>`;
+    d.onclick=()=>{rSel.has(s.g)?rSel.delete(s.g):rSel.add(s.g);d.classList.toggle('on',rSel.has(s.g));};
+    g.appendChild(d);
+  });
+})();
+
+function rAllSz(v){rSel=v?new Set(ALL_SIZES.map(s=>s.g)):new Set();document.querySelectorAll('#rSzGrid .sz').forEach(c=>c.classList.toggle('on',v));}
+function setFmt(f,btn){rFmt=f;document.querySelectorAll('.fmt-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+
+function rGoStep(n){
+  ['rp1','rp2','rp3'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===n));
+  ['rs1','rs2','rs3'].forEach((id,i)=>{
+    const s=document.getElementById(id);
+    s.classList.toggle('active',i+1===n);
+    s.classList.toggle('done',i+1<n);
+  });
+}
+
+function rHandleDrop(ev){ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)rProcessFile(f);}
+function rHandleInput(ev){const f=ev.target.files[0];if(f)rProcessFile(f);ev.target.value='';}
+
+async function rProcessFile(file){
+  document.getElementById('rWarn').style.display='none';
+  if(file.type.startsWith('image/')||file.name.toLowerCase().endsWith('.gif')){
+    await rLoadImg(file,[{name:file.name,type:'img'}]);
+  } else if(file.name.toLowerCase().endsWith('.zip')){
+    const zone=document.getElementById('rUzZone');
+    zone.querySelector('p').textContent='Reading ZIP...';
+    try{
+      const result=await extractFromZip(file);
+      if(!result){zone.querySelector('p').textContent='Drop your ZIP here';showWarnEl('rWarn','No image found in ZIP.');return;}
+      zone.classList.add('done');
+      zone.querySelector('p').textContent=file.name;
+      zone.querySelector('.sub').textContent=`${result.allNames.length} files · KV auto-extracted`;
+      await rLoadImg(result.imgFile, result.entries);
+    }catch(e){zone.querySelector('p').textContent='Drop your ZIP here';showWarnEl('rWarn','Could not read ZIP: '+e.message);}
+  } else {
+    showWarnEl('rWarn','Please upload a ZIP, JPG, PNG, or GIF.');
+  }
+}
+
+async function rLoadImg(file, entries){
+  const url=await readDataUrl(file);
+  rFile=file; rDataUrl=url;
+  const img=await loadImg(url);
+  document.getElementById('rExtracted').style.display='block';
+  showExtracted('rThumb','rKvName','rKvMeta','rFileList',url,file.name,
+    `${fmtSize(file.size)} · ${img.naturalWidth}×${img.naturalHeight}px`,entries);
+  document.getElementById('rN1').disabled=false;
+}
+
+async function rProcess(){
+  if(!rFile) return;
+  const activeSizes=ALL_SIZES.filter(s=>rSel.has(s.g));
+  if(!activeSizes.length){showWarnEl('rWarn','Select at least one size.');return;}
+
+  // Always use server-side Pillow for high quality + smart crop
+  const btn=document.querySelector('#rp2 .btn.primary');
+  if(btn){btn.disabled=true;btn.textContent='Processing...';}
+
+  try{
+    // First get a ZIP of all sizes from server for download
+    const formData=new FormData();
+    formData.append('file',rFile);
+    formData.append('format',rFmt);
+    formData.append('sizes',activeSizes.map(s=>s.g).join(','));
+    const resp=await fetch('/api/process',{method:'POST',body:formData});
+    if(!resp.ok){showWarnEl('rWarn','Server error — try again.');return;}
+    const blob=await resp.blob();
+    window._rZipBlob=blob;
+    window._rName=rFile.name.replace(/\.[^.]+$/,'');
+
+    // For preview, get individual images to show in grid
+    const previews=await Promise.all(activeSizes.map(async s=>{
+      const fd=new FormData();
+      fd.append('file',rFile);
+      fd.append('format',rFmt);
+      fd.append('sizes',s.g);
+      fd.append('single_size','1');
+      const r=await fetch('/api/process',{method:'POST',body:fd});
+      if(!r.ok) return {...s,dataUrl:null};
+      const b=await r.blob();
+      const url=await blobToDataUrl(b);
+      return{...s,dataUrl:url};
+    }));
+
+    window._rPreviews=previews;
+    renderResizeResults(activeSizes, previews);
+    rGoStep(3);
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='⬇ Download All Sizes';}
+  }
+}
+
+function blobToDataUrl(blob){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.onerror=j;fr.readAsDataURL(blob);});}
+
+function renderResizeResults(sizes, resized){
+  const name=rFile.name.replace(/\.[^.]+$/,'');
+  document.getElementById('rResTitle').textContent=rFile.name;
+  document.getElementById('rResSubtitle').textContent=`${sizes.length} sizes · fit to width · ratio preserved`;
+  const g=document.getElementById('rResGrid');g.innerHTML='';
+  const MAX_W=800,MAX_H=400;
+  (resized||sizes).forEach(r=>{
+    const dispScale=Math.min(1,MAX_W/r.w,MAX_H/r.h);
+    const dispW=Math.round(r.w*dispScale);
+    const dispH=Math.round(r.h*dispScale);
+    const scaledDispH=r.scaledH?Math.round(r.scaledH*dispScale):dispH;
+    const d=document.createElement('div');d.className='rc';
+    d.innerHTML=`
+      <div class="rc-hd"><span class="rc-title">${r.n}</span><span class="rc-dims">${r.w}×${r.h}</span></div>
+      <div class="rc-img" style="min-height:${dispH}px" ${r.dataUrl?`onclick="openZoom('${r.n}','${r.dataUrl}',${r.w},${r.h})"`:''}>${r.dataUrl?`
+        <img src="${r.dataUrl}" style="width:${dispW}px;height:${scaledDispH}px;object-fit:fill;object-position:top left;display:block;" alt="${r.n}">
+        ${dispScale<1?`<div class="scale-tag">${Math.round(dispScale*100)}%</div>`:''}
+      `:`<span style="font-size:11px;color:var(--text3)">GIF — downloaded as ZIP</span>`}</div>
+      <div class="rc-ft">
+        <div>
+          <span class="rc-gam">${r.g} · ${r.t.toUpperCase()}</span>
+          ${r.fillPct?`<div class="fit-info">${r.fillPct}% height filled</div>`:''}
+        </div>
+        ${r.dataUrl?`<button class="dl-btn" onclick="rDlOne('${r.g}')">⬇ Download</button>`:''}
+      </div>`;
+    g.appendChild(d);
+  });
+  // store for zip download
+  window._rResized=resized;
+  window._rName=name;
+}
+
+function rDlOne(gam){
+  const r=(window._rPreviews||[]).find(x=>x.g===gam);
+  if(r&&r.dataUrl){
+    const a=document.createElement('a');
+    a.href=r.dataUrl;
+    a.download=`${window._rName}_${r.w}x${r.h}.${rFmt}`;
+    a.click();
+  }
+}
+
+async function rDlAll(){
+  if(window._rZipBlob){
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(window._rZipBlob);
+    a.download=`${window._rName}_all-sizes.zip`;a.click();
+    return;
+  }
+  showWarnEl('rWarn','No files to download.');
+}
+
+function showWarnEl(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+
+// ── GENERATE MODE ─────────────────────────
+let gSel=new Set(ALL_SIZES.map(s=>s.g));
+let gKvB64=null,gKvMime=null,gKvFileName='';
+let gResults=[],gCopyData=null,gKvAnalysis='';
+
+(function buildGSizes(){
+  const g=document.getElementById('gSzGrid');
+  ALL_SIZES.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='sz on';d.dataset.g=s.g;
+    d.innerHTML=`<div class="sn">${s.n}</div><div class="sd">${s.w}×${s.h}</div><span class="st st-${s.t}">${s.t.toUpperCase()}</span>`;
+    d.onclick=()=>{gSel.has(s.g)?gSel.delete(s.g):gSel.add(s.g);d.classList.toggle('on',gSel.has(s.g));};
+    g.appendChild(d);
+  });
+})();
+
+function gAllSz(v){gSel=v?new Set(ALL_SIZES.map(s=>s.g)):new Set();document.querySelectorAll('#gSzGrid .sz').forEach(c=>c.classList.toggle('on',v));}
+function gChk2(){document.getElementById('gN2').disabled=!(document.getElementById('gModel').value.trim()&&document.getElementById('gCta').value.trim());}
+
+function gGoStep(n){
+  ['gp1','gp2','gp3','gp4'].forEach((id,i)=>document.getElementById(id).classList.toggle('active',i+1===n));
+  ['gs1','gs2','gs3','gs4'].forEach((id,i)=>{
+    const s=document.getElementById(id);
+    s.classList.toggle('active',i+1===n);
+    s.classList.toggle('done',i+1<n);
+  });
+}
+
+function gHandleDrop(ev){ev.preventDefault();const f=ev.dataTransfer.files[0];if(f)gProcessFile(f);}
+function gHandleInput(ev){const f=ev.target.files[0];if(f)gProcessFile(f);ev.target.value='';}
+
+async function gProcessFile(file){
+  document.getElementById('gWarn').style.display='none';
+  if(file.type.startsWith('image/')){
+    await gLoadKv(file);
+  } else if(file.name.toLowerCase().endsWith('.zip')){
+    const zone=document.getElementById('gUzZone');
+    zone.querySelector('p').textContent='Reading ZIP...';
+    try{
+      const result=await extractFromZip(file);
+      if(!result){zone.querySelector('p').textContent='Drop your KV here';showWarnEl('gWarn','No image found in ZIP.');return;}
+      zone.classList.add('done');
+      zone.querySelector('p').textContent=file.name;
+      zone.querySelector('.sub').textContent=`KV auto-extracted · ${result.allNames.length} files`;
+      await gLoadKv(result.imgFile);
+    }catch(e){zone.querySelector('p').textContent='Drop your KV here';showWarnEl('gWarn','Could not read ZIP: '+e.message);}
+  }
+}
+
+async function gLoadKv(file){
+  const url=await readDataUrl(file);
+  gKvB64=url.split(',')[1];gKvMime=file.type;gKvFileName=file.name;
+  const img=await loadImg(url);
+  document.getElementById('gExtracted').style.display='block';
+  showExtracted('gThumb','gKvName','gKvMeta',null,url,file.name,`${fmtSize(file.size)} · ${img.naturalWidth}×${img.naturalHeight}px`,null);
+  document.getElementById('gN1').disabled=false;
+}
+
+async function gGenerate(){
+  gGoStep(4);
+  document.getElementById('gGenWrap').style.display='block';
+  document.getElementById('gResWrap').style.display='none';
+  document.getElementById('gErr').style.display='none';
   const brief={
-    model:document.getElementById('carModel').value.trim(),
-    cta:document.getElementById('ctaText').value.trim(),
-    aud:document.getElementById('audience').value.trim(),
-    offer:document.getElementById('offer').value.trim(),
-    theme:document.getElementById('theme').value.trim(),
-    style:document.getElementById('styleNotes').value.trim(),
+    model:document.getElementById('gModel').value.trim(),
+    cta:document.getElementById('gCta').value.trim(),
+    aud:document.getElementById('gAud').value.trim(),
+    offer:document.getElementById('gOffer').value.trim(),
+    theme:document.getElementById('gTheme').value.trim(),
+    style:document.getElementById('gStyle').value.trim(),
   };
   const icons=['📦','👁','✍️','✨','📐','📦'];
   function gStep(n,state){
-    const el=document.getElementById('g'+n);
+    const el=document.getElementById('gg'+n);
     el.className='gs'+(state?' '+state:'');
     if(state==='run'){
       const sp=document.createElement('div');sp.className='spinner';
@@ -351,97 +673,99 @@ async function generate(){
     gStep(1,'done');
     gStep(2,'run');
     const r1=await fetch('/api/analyse-kv',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({image_b64:kvB64,mime:kvMime,car_model:brief.model})});
+      body:JSON.stringify({image_b64:gKvB64,mime:gKvMime,car_model:brief.model})});
     const d1=await r1.json();
     if(d1.error)throw new Error(d1.error);
-    kvAnalysis=d1.analysis;
+    gKvAnalysis=d1.analysis;
     gStep(2,'done');
-
     gStep(3,'run');
     const r2=await fetch('/api/write-copy',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({brief,analysis:kvAnalysis})});
+      body:JSON.stringify({brief,analysis:gKvAnalysis})});
     const d2=await r2.json();
     if(d2.error)throw new Error(d2.error);
-    copyData=d2;
+    gCopyData=d2;
     gStep(3,'done');
-
     gStep(4,'run');
-    const prompt=`Professional automotive advertisement for the ${brief.model}.
-Style reference (replicate closely): ${kvAnalysis}
-${brief.style?'Additional notes: '+brief.style:''}
-Hero: ${brief.model} prominently featured. Include text: "${copyData.headline}" as headline, "${copyData.subheadline}" as subline, "${copyData.cta}" as CTA button.
-Replicate colour palette, background, typography hierarchy from style reference. High production value, magazine quality.`;
-    const r3=await fetch('/api/generate-image',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({prompt})});
+    const prompt=`Professional automotive advertisement for the ${brief.model}. Style reference: ${gKvAnalysis}. ${brief.style?'Additional notes: '+brief.style:''} Hero: ${brief.model} prominently featured. Headline: "${gCopyData.headline}". Subline: "${gCopyData.subheadline}". CTA: "${gCopyData.cta}". Replicate colour palette and layout. Magazine quality.`;
+    const r3=await fetch('/api/generate-image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
     const d3=await r3.json();
     if(d3.error)throw new Error(d3.error);
     const imgUrl='data:image/png;base64,'+d3.b64_json;
     gStep(4,'done');
-
     gStep(5,'run');
     const img=await loadImg(imgUrl);
-    results=Array.from(sel).map(g=>{
-      const s=SIZES.find(x=>x.g===g);if(!s)return null;
+    gResults=Array.from(gSel).map(g=>{
+      const s=ALL_SIZES.find(x=>x.g===g);if(!s)return null;
       const c=document.createElement('canvas');c.width=s.w;c.height=s.h;
-      const ctx=c.getContext('2d');
-      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,s.w,s.h);
-      const scale=s.w/img.width;
-      ctx.drawImage(img,0,0,s.w,Math.round(img.height*scale));
+      const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,s.w,s.h);
+      ctx.drawImage(img,0,0,s.w,Math.round(img.height*(s.w/img.width)));
       return{...s,dataUrl:c.toDataURL('image/png',0.92)};
     }).filter(Boolean);
     gStep(5,'done');
-
     gStep(6,'run');
-    renderResults(copyData,results);
+    gRenderResults();
     gStep(6,'done');
-    document.getElementById('genWrap').style.display='none';
-    document.getElementById('resWrap').style.display='block';
+    document.getElementById('gGenWrap').style.display='none';
+    document.getElementById('gResWrap').style.display='block';
   }catch(err){
-    const e=document.getElementById('genErr');
+    const e=document.getElementById('gErr');
     e.textContent='Error: '+(err.message||'Something went wrong.');
     e.style.display='block';
   }
 }
 
-function renderResults(copy,res){
-  document.getElementById('copyBox').innerHTML=`
+function gRenderResults(){
+  document.getElementById('gCopyBox').innerHTML=`
     <div class="cb-lbl">Generated copy</div>
-    <div class="cb-row"><span class="cb-k">Headline</span><span class="cb-v">${copy.headline}</span></div>
-    <div class="cb-row"><span class="cb-k">Subheadline</span><span class="cb-v">${copy.subheadline}</span></div>
-    <div class="cb-row"><span class="cb-k">Body</span><span class="cb-v">${copy.body}</span></div>
-    <div class="cb-row"><span class="cb-k">CTA</span><span class="cb-v">${copy.cta}</span></div>`;
-  document.getElementById('kvUsed').innerHTML=`<strong style="color:var(--green)">KV analysed:</strong> ${kvAnalysis}`;
-  const g=document.getElementById('resGrid');g.innerHTML='';
-  res.forEach(r=>{
+    <div class="cb-row"><span class="cb-k">Headline</span><span class="cb-v">${gCopyData.headline}</span></div>
+    <div class="cb-row"><span class="cb-k">Subheadline</span><span class="cb-v">${gCopyData.subheadline}</span></div>
+    <div class="cb-row"><span class="cb-k">Body</span><span class="cb-v">${gCopyData.body}</span></div>
+    <div class="cb-row"><span class="cb-k">CTA</span><span class="cb-v">${gCopyData.cta}</span></div>`;
+  document.getElementById('gKvUsed').innerHTML=`<strong style="color:var(--green)">KV analysed:</strong> ${gKvAnalysis}`;
+  const g=document.getElementById('gResGrid');g.innerHTML='';
+  gResults.forEach(r=>{
     const d=document.createElement('div');d.className='rc';
     d.innerHTML=`
       <div class="rc-hd"><span class="rc-title">${r.n}</span><span class="rc-dims">${r.w}×${r.h}</span></div>
       <div class="rc-img"><img src="${r.dataUrl}" alt="${r.n}"></div>
       <div class="rc-ft">
         <span class="rc-gam">${r.g} · ${r.t.toUpperCase()}</span>
-        <button class="dl-btn" onclick="dlOne('${r.g}')">⬇ Download</button>
+        <button class="dl-btn" onclick="gDlOne('${r.g}')">⬇ Download</button>
       </div>`;
     g.appendChild(d);
   });
 }
 
-function dlOne(gam){
-  const r=results.find(x=>x.g===gam);if(!r)return;
+function gDlOne(gam){
+  const r=gResults.find(x=>x.g===gam);if(!r)return;
   const a=document.createElement('a');
   a.href=r.dataUrl;
-  a.download=`${(document.getElementById('carModel').value||'creative').replace(/\s+/g,'-')}_${r.w}x${r.h}.png`;
+  a.download=`${(document.getElementById('gModel').value||'creative').replace(/\s+/g,'-')}_${r.w}x${r.h}.png`;
   a.click();
 }
 
-async function dlAll(){
-  if(!results.length)return;
+async function gDlAll(){
+  if(!gResults.length)return;
   const zip=new JSZip();const folder=zip.folder('creatives');
-  const name=(document.getElementById('carModel').value||'creative').replace(/\s+/g,'-');
-  results.forEach(r=>folder.file(`${name}_${r.w}x${r.h}.png`,r.dataUrl.split(',')[1],{base64:true}));
-  if(copyData)folder.file('copy.txt',`Headline: ${copyData.headline}\nSubheadline: ${copyData.subheadline}\nBody: ${copyData.body}\nCTA: ${copyData.cta}\n\nKV Analysis:\n${kvAnalysis}`);
+  const name=(document.getElementById('gModel').value||'creative').replace(/\s+/g,'-');
+  gResults.forEach(r=>folder.file(`${name}_${r.w}x${r.h}.png`,r.dataUrl.split(',')[1],{base64:true}));
+  if(gCopyData)folder.file('copy.txt',`Headline: ${gCopyData.headline}\nSubheadline: ${gCopyData.subheadline}\nBody: ${gCopyData.body}\nCTA: ${gCopyData.cta}\n\nKV Analysis:\n${gKvAnalysis}`);
   const blob=await zip.generateAsync({type:'blob'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`${name}_all-creatives.zip`;a.click();
+}
+
+// ── ZOOM ──────────────────────────────────
+function openZoom(name,url,w,h){
+  document.getElementById('zoomTitle').textContent=`${name} — ${w}×${h}px`;
+  document.getElementById('zoomImg').src=url;
+  document.getElementById('zoomImg').style.width=Math.min(w,window.innerWidth*0.88)+'px';
+  document.getElementById('zoomMeta').textContent=`Canvas: ${w}×${h}px`;
+  document.getElementById('zoomOverlay').classList.add('show');
+}
+function closeZoom(e){
+  if(!e||e.target===document.getElementById('zoomOverlay')||e.target.id==='zoomClose')
+    document.getElementById('zoomOverlay').classList.remove('show');
 }
 </script>
 </body>
