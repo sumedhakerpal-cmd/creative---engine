@@ -98,7 +98,7 @@ def analyse_kv():
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
         msg = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-opus-4-5",
             max_tokens=350,
             messages=[{
                 "role": "user",
@@ -128,7 +128,7 @@ def write_copy():
 {{"headline":"max 7 words","subheadline":"max 12 words","body":"max 18 words","cta":"{brief.get('cta','Learn More')}"}}
 Car: {brief.get('model','the car')} | Audience: {brief.get('aud','urban buyers')} | Offer: {brief.get('offer','competitive pricing')} | Theme: {brief.get('theme','modern')} | KV style: {analysis} | Notes: {brief.get('style','none')}"""
         msg = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-opus-4-5",
             max_tokens=400,
             messages=[{"role": "user", "content": prompt}]
         )
